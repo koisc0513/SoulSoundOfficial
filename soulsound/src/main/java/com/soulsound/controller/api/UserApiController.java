@@ -5,6 +5,7 @@ import com.soulsound.entity.*;
 import java.util.Comparator;
 import com.soulsound.repository.LikeRepository;
 import com.soulsound.repository.UserRepository;
+import com.soulsound.service.FileStorageService;
 import com.soulsound.service.PlaylistService;
 import com.soulsound.service.TrackService;
 import com.soulsound.service.UserService;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,20 +23,22 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/users")
 public class UserApiController {
 
-    private final UserService     userService;
-    private final TrackService    trackService;
-    private final PlaylistService playlistService;
-    private final LikeRepository  likeRepo;
-    private final UserRepository  userRepo;
+    private final UserService        userService;
+    private final TrackService       trackService;
+    private final PlaylistService    playlistService;
+    private final LikeRepository     likeRepo;
+    private final UserRepository     userRepo;
+    private final FileStorageService fileStorage;
 
     public UserApiController(UserService userService, TrackService trackService,
                              PlaylistService playlistService, LikeRepository likeRepo,
-                             UserRepository userRepo) {
+                             UserRepository userRepo, FileStorageService fileStorage) {
         this.userService     = userService;
         this.trackService    = trackService;
         this.playlistService = playlistService;
         this.likeRepo        = likeRepo;
         this.userRepo        = userRepo;
+        this.fileStorage     = fileStorage;
     }
 
     // GET /api/users/profile/{email}
@@ -119,6 +123,30 @@ public class UserApiController {
             User user = userService.findByEmail(principal.getUsername());
             User updated = userService.updateProfile(user.getId(), dto);
             return ResponseEntity.ok(buildFullUserDto(updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // PATCH /api/users/banner — cập nhật ảnh banner
+    @PostMapping("/banner")
+    public ResponseEntity<?> updateBanner(
+            @RequestParam("bannerFile") MultipartFile bannerFile,
+            @AuthenticationPrincipal UserDetails principal) {
+
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Chưa đăng nhập."));
+
+        try {
+            User user = userService.findByEmail(principal.getUsername());
+            // Xóa banner cũ nếu có
+            if (user.getBannerUrl() != null && !user.getBannerUrl().isBlank()) {
+                fileStorage.deleteFile(user.getBannerUrl());
+            }
+            String newUrl = fileStorage.saveBanner(bannerFile);
+            user.setBannerUrl(newUrl);
+            userRepo.save(user);
+            return ResponseEntity.ok(Map.of("bannerUrl", newUrl));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -216,9 +244,10 @@ public class UserApiController {
         m.put("id",            u.getId());
         m.put("fullName",      u.getFullName());
         m.put("email",         u.getEmail());
-        m.put("avatarUrl",     u.getAvatarUrl() != null ? u.getAvatarUrl() : "");
-        m.put("bio",           u.getBio() != null ? u.getBio() : "");
-        m.put("address",       u.getAddress() != null ? u.getAddress() : "");
+        m.put("avatarUrl",     u.getAvatarUrl()  != null ? u.getAvatarUrl()  : "");
+        m.put("bannerUrl",     u.getBannerUrl()  != null ? u.getBannerUrl()  : "");
+        m.put("bio",           u.getBio()        != null ? u.getBio()        : "");
+        m.put("address",       u.getAddress()    != null ? u.getAddress()    : "");
         m.put("birthYear",     u.getBirthYear());
         m.put("phoneNumber",   u.getPhoneNumber() != null ? u.getPhoneNumber() : "");
         m.put("role",          u.getRole().name());

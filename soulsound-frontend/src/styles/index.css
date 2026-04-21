@@ -492,6 +492,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   height: 180px;
   background: linear-gradient(135deg, #1a0800 0%, #2d1000 40%, #0d0d0d 100%);
   position: relative;
+  overflow: hidden;        /* ảnh không tràn ra ngoài bo góc nếu có */
 }
 
 .profile-info {
@@ -499,8 +500,9 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   align-items: flex-end;
   gap: 20px;
   padding: 0 24px 16px;
-  margin-top: -48px;
+  margin-top: -48px;       /* avatar đè lên dưới banner — KHÔNG thay đổi */
   position: relative;
+  z-index: 1;              /* đảm bảo avatar luôn nằm trên banner */
   flex-wrap: wrap;
 }
 
@@ -518,22 +520,22 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   border-bottom: 1px solid var(--border);
 }
 
-.stat { text-align: center; padding: 6px 10px; }
-.stat__number { font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; }
-.stat__label  { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+/* Label trên — số dưới, giống SoundCloud */
+.stat { text-align: left; padding: 0; }
+.stat__label  { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 4px; }
+.stat__number { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: #fff; line-height: 1; }
 
 .stat-clickable {
   background: none;
   border: none;
   cursor: pointer;
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
-  transition: background var(--transition);
+  padding: 0;
   font-family: var(--font-body);
-  text-align: center;
+  text-align: left;
+  transition: opacity var(--transition);
 }
-.stat-clickable:hover { background: var(--bg-surface); }
-.stat-clickable:hover .stat__number { color: var(--accent-hover); }
+.stat-clickable:hover { opacity: 0.75; }
+.stat-clickable:hover .stat__number { color: #fff; }
 
 /* Tabs */
 .tabs {

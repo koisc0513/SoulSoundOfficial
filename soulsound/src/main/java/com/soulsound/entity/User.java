@@ -49,6 +49,9 @@ public class User {
     @Column(name = "avatar_url")
     private String avatarUrl;                    // đường dẫn local, ví dụ: /uploads/avatars/xxx.jpg
 
+    @Column(name = "banner_url")
+    private String bannerUrl;                    // ảnh banner trang profile
+
     @Column(columnDefinition = "TEXT")
     private String bio;
 
@@ -134,6 +137,9 @@ public class User {
 
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public String getBannerUrl() { return bannerUrl; }
+    public void setBannerUrl(String bannerUrl) { this.bannerUrl = bannerUrl; }
 
     public String getBio() { return bio; }
     public void setBio(String bio) { this.bio = bio; }

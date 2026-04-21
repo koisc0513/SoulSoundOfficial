@@ -20,6 +20,7 @@ public class FileStorageService {
     private static final String TRACK_DIR     = "tracks";
     private static final String AVATAR_DIR    = "avatars";
     private static final String THUMBNAIL_DIR = "thumbnails";
+    private static final String BANNER_DIR    = "banners";
 
     private static final long MAX_AUDIO_SIZE = 50 * 1024 * 1024L;
     private static final long MAX_IMAGE_SIZE =  5 * 1024 * 1024L;
@@ -34,6 +35,7 @@ public class FileStorageService {
             Files.createDirectories(rootLocation.resolve(TRACK_DIR));
             Files.createDirectories(rootLocation.resolve(AVATAR_DIR));
             Files.createDirectories(rootLocation.resolve(THUMBNAIL_DIR));
+            Files.createDirectories(rootLocation.resolve(BANNER_DIR));
             System.out.println(">>> Upload root: " + rootLocation);
         } catch (IOException e) {
             throw new RuntimeException("Không thể tạo thư mục upload: " + uploadDir, e);
@@ -50,6 +52,11 @@ public class FileStorageService {
     public String saveAvatar(MultipartFile file) throws IOException {
         validateImage(file);
         return saveFile(file, AVATAR_DIR);
+    }
+
+    public String saveBanner(MultipartFile file) throws IOException {
+        validateImage(file);
+        return saveFile(file, BANNER_DIR);
     }
 
     public String saveThumbnail(MultipartFile file) throws IOException {

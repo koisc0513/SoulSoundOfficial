@@ -61,6 +61,7 @@ export const tracksApi = {
 export const usersApi = {
   getProfile:   (email)    => api.get(`/users/profile/${encodeURIComponent(email)}`),
   updateProfile:(formData) => api.put('/users/profile', formData),
+  updateBanner: (formData) => api.post('/users/banner', formData),
   follow:       (id)       => api.post(`/users/${id}/follow`),
   getFollowers: (id)       => api.get(`/users/${id}/followers`),
   getFollowing: (id)       => api.get(`/users/${id}/following`),
