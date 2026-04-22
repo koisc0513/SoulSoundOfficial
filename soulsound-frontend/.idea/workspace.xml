@@ -5,15 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="46b3f773-9f45-458f-87a9-e78404f3d47d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/_metadata.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/_metadata.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/api/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/Profile.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Profile.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/styles/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/styles/index.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/controller/api/UserApiController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/controller/api/UserApiController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/entity/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/service/FileStorageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/service/FileStorageService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/entity/ListeningHistory.java" beforeDir="false" afterPath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/entity/ListeningHistory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/repository/ListeningHistoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/repository/ListeningHistoryRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/service/TrackService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/service/TrackService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,35 +18,35 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "koisc0513"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;koisc0513&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "git@github.com:koisc0513/SoulSoundOfficial.git",
-    "accountId": "a56500f4-5f71-4f1d-ad01-2c0adb9630bd"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:koisc0513/SoulSoundOfficial.git&quot;,
+    &quot;accountId&quot;: &quot;a56500f4-5f71-4f1d-ad01-2c0adb9630bd&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 5
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 5
+}</component>
   <component name="ProjectId" id="3CfHhUmaeMedM1513qZNmahACyq" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/duc/soulsound/soulsound"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/duc/soulsound/soulsound&quot;
   }
-}]]></component>
+}</component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">

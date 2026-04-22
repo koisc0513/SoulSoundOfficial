@@ -145,9 +145,16 @@ public class TrackService {
     // ── Ghi lịch sử nghe ────────────────────────────────────────────
 
     public void recordListeningHistory(Long trackId, Long userId) {
+
         Track track = findById(trackId);
-        User  user  = userRepo.findById(userId)
+
+        User user = userRepo.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("User không tồn tại."));
+
+        // Xóa record cũ
+        historyRepo.deleteByUser_IdAndTrack_Id(userId, trackId);
+
+        // Insert mới
         historyRepo.save(new ListeningHistory(user, track));
     }
 
@@ -267,7 +274,17 @@ public class TrackService {
     @Transactional(readOnly = true)
     public Page<ListeningHistory> getHistory(Long userId, int page) {
         Pageable pageable = PageRequest.of(page, 20);
-        return historyRepo.findByUserIdOrderByListenedAtDesc(userId, pageable);
+        return historyRepo.findByUser_IdOrderByListenedAtDesc(userId, pageable);
+    }
+
+    /** Xóa 1 bài khỏi lịch sử nghe */
+    public void removeFromHistory(Long trackId, Long userId) {
+        historyRepo.deleteByUser_IdAndTrack_Id(userId, trackId);
+    }
+
+    /** Xóa toàn bộ lịch sử nghe */
+    public void clearHistory(Long userId) {
+        historyRepo.deleteByUser_Id(userId);
     }
 
     // ── Stats ────────────────────────────────────────────────────────
