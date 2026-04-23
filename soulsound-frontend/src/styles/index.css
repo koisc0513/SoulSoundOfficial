@@ -294,17 +294,43 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   border-radius: var(--radius-md);
   transition: border-color var(--transition), background var(--transition);
 }
-.track-card:hover { border-color: var(--border-accent); background: var(--bg-elevated); }
 
-.track-card__thumb {
-  width: 80px; height: 80px;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
+.track-card:hover {
+  border-color: var(--border-accent);
+  background: var(--bg-elevated);
+}
+
+/* Thumbnail */
+.track-card__thumb-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
 }
 
-.track-card__info { flex: 1; min-width: 0; }
+.track-card__thumb {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
 
+/* Info */
+.track-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Actions */
+.track-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;   /* QUAN TRỌNG */
+  flex-shrink: 0;
+}
+
+/* Title */
 .track-card__title {
   display: block;
   font-weight: 600;
@@ -316,8 +342,12 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   color: var(--text-primary);
   text-decoration: none;
 }
-.track-card__title:hover { color: var(--accent); }
 
+.track-card__title:hover {
+  color: var(--accent);
+}
+
+/* Artist */
 .track-card__artist {
   font-size: 0.83rem;
   color: var(--accent);
@@ -327,6 +357,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   margin-bottom: 5px;
 }
 
+/* Meta */
 .track-card__meta {
   display: flex;
   align-items: center;
@@ -334,66 +365,76 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   font-size: 0.78rem;
   color: var(--text-muted);
 }
-.track-card__genre {
-  padding: 2px 8px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  transition: all var(--transition);
-}
-.track-card__genre:hover { border-color: var(--accent); color: var(--accent); }
 
-/* Play button overlay */
-.player-btn--play {
+/* Play overlay */
+.track-card__play {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-sm);
+  background: rgba(245,80,10,0.85);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(245,80,10,0.85);
-  border: none;
-  cursor: pointer;
   color: #fff;
-  transition: opacity var(--transition);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .2s ease;
 }
-.player-btn--play:hover { background: var(--accent); }
+
+.track-card__thumb-wrap:hover .track-card__play {
+  opacity: 1;
+}
 
 /* ── PLAYER BAR ──────────────────────────────────────────────────── */
+
 .player-bar {
   position: fixed;
-  bottom: 0; left: 0; right: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
   height: var(--player-height);
+
   background: rgba(20,20,20,0.97);
   backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
+
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 0 20px;
+
+  padding: 0 18px;
+
   z-index: 1000;
 }
 
-.player-bar__thumb {
-  width: 48px; height: 48px;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
+/* ── CONTROLS ───────────────────────── */
+
+.player-bar__controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
 }
 
-.player-bar__info { min-width: 0; flex: 0 0 180px; }
-.player-bar__title  { font-weight: 600; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.player-bar__artist { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.player-bar__controls { display: flex; align-items: center; gap: 8px; }
+/* ── PROGRESS ───────────────────────── */
 
 .player-bar__progress {
   flex: 1;
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 200px;
 }
-.player-bar__time { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+
+.player-bar__time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Progress bar */
 
 .progress-bar {
   flex: 1;
@@ -404,33 +445,189 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   position: relative;
   transition: height var(--transition);
 }
-.progress-bar:hover { height: 6px; }
+
+.progress-bar:hover {
+  height: 6px;
+}
+
 .progress-bar__fill {
   height: 100%;
   background: var(--accent);
   border-radius: 2px;
   transition: width 0.1s linear;
-  pointer-events: none;
 }
 
-.player-bar__volume { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+/* Hover dot */
 
-/* Player button */
+.progress-bar::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.progress-bar:hover::after {
+  opacity: 1;
+}
+
+/* ── VOLUME ───────────────────────── */
+
+.player-bar__volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 140px;
+}
+
+/* ── TRACK INFO ───────────────────────── */
+
+.player-bar__track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.player-bar__track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 240px;
+  overflow: hidden;   /* quan trọng */
+}
+
+.player-bar__track img {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+
+  object-fit: cover;
+  border-radius: 6px;
+
+  flex-shrink: 0;
+}
+
+.player-bar__info {
+  min-width: 0;
+}
+
+.player-bar__title {
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-bar__artist {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── ACTIONS ───────────────────────── */
+
+.player-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ── PLAYER BUTTON ───────────────────────── */
+
 .player-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px; height: 36px;
+
+  width: 34px;
+  height: 34px;
+
   background: transparent;
   border: none;
   border-radius: 50%;
+
   cursor: pointer;
   color: var(--text-secondary);
-  font-size: 1rem;
-  transition: color var(--transition), background var(--transition);
-}
-.player-btn:hover { color: var(--text-primary); background: var(--bg-elevated); }
+  font-size: 0.95rem;
 
+  transition:
+    color var(--transition),
+    background var(--transition),
+    transform 0.15s ease;
+}
+
+.player-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.player-btn:hover i {
+  transform: scale(1.1);
+}
+
+/* Active */
+
+.player-btn.active {
+  color: var(--accent);
+}
+
+.player-btn.active:hover {
+  background: var(--accent-dim);
+}
+
+/* Main Play */
+
+.player-btn--play {
+  width: 40px;
+  height: 40px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.player-btn--play:hover {
+  background: var(--accent-hover);
+  color: #fff;
+}
+
+/* Like animation */
+
+.player-btn.like.active i {
+  animation: heartPop 0.25s ease;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* ── RESPONSIVE ───────────────────────── */
+
+@media (max-width: 900px) {
+
+  .player-bar__track {
+    display: none;
+  }
+
+  .player-bar__volume {
+    display: none;
+  }
+
+}
 /* ── WIDGET ──────────────────────────────────────────────────────── */
 .widget {
   background: var(--bg-surface);
@@ -611,3 +808,107 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   transition: border-color var(--transition), background var(--transition);
 }
 .upload-zone:hover { border-color: var(--accent); background: var(--accent-dim); }
+
+/* ── QUEUE PANEL (Next Up) ────────────────────────────────────────── */
+.queue-panel {
+  position: fixed;
+  bottom: calc(var(--player-height) + 8px);
+  right: 24px;
+  width: 300px;
+  max-height: 420px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 4000;
+  animation: slideUpIn 0.2s ease;
+}
+@keyframes slideUpIn {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.queue-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.queue-panel__section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 8px 14px 4px;
+}
+
+.queue-panel__footer {
+  padding: 8px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.queue-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background var(--transition);
+  position: relative;
+}
+.queue-item:hover { background: var(--bg-surface); }
+.queue-item--active { background: var(--accent-dim); }
+
+.queue-item img {
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.queue-item__info { flex: 1; min-width: 0; }
+.queue-item__title {
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+.queue-item--active .queue-item__title { color: var(--accent); }
+
+.queue-item__artist {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-item__playing-icon {
+  color: var(--accent);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  animation: pulseIcon 1.2s ease-in-out infinite;
+}
+@keyframes pulseIcon {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* Scrollable queue list area */
+.queue-panel > *:not(.queue-panel__header):not(.queue-panel__footer) {
+  overflow-y: auto;
+}

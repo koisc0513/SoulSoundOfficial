@@ -6,9 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="46b3f773-9f45-458f-87a9-e78404f3d47d" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/entity/ListeningHistory.java" beforeDir="false" afterPath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/entity/ListeningHistory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/repository/ListeningHistoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/repository/ListeningHistoryRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/service/TrackService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../soulsound/src/main/java/com/soulsound/service/TrackService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Player/PlayerBar.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Player/PlayerBar.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Track/TrackCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Track/TrackCard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/context/PlayerContext.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/context/PlayerContext.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Home.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Home.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Liked.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Liked.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Profile.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Profile.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Search.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Search.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/styles/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/styles/index.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,14 +44,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/duc/soulsound/soulsound&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/duc/soulsound/soulsound-frontend"
   }
-}</component>
+}]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">

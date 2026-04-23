@@ -4,94 +4,149 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { usePlayer } from '../../context/PlayerContext'
-import { useAuth }   from '../../context/AuthContext'
-import { tracksApi } from '../../api/index.js'
+import { useAuth } from '../../context/AuthContext'
 
-export default function TrackCard({ track, likedIds = new Set(), onLikeChange }) {
-  const { playTrack, currentTrack, isPlaying } = usePlayer()
+export default function TrackCard({ track, trackList }) {
+
+  const {
+    playTrack,
+    currentTrack,
+    isPlaying,
+    likedTracks,
+    toggleLike
+  } = usePlayer()
+
   const { user } = useAuth()
-  const [liked, setLiked]   = useState(likedIds.has(track.id))
+
   const [loading, setLoading] = useState(false)
 
-  const isActive = currentTrack?.id === track.id
+  const liked =
+    likedTracks.includes(track.id)
+
+  const isActive =
+    currentTrack?.id === track.id
+
 
   const handlePlay = (e) => {
     e.preventDefault()
-    playTrack(track)
+    playTrack(track, trackList || undefined)
   }
+
 
   const handleLike = async (e) => {
+
     e.stopPropagation()
+
     if (!user) return
+
     setLoading(true)
-    try {
-      const res = await tracksApi.like(track.id)
-      setLiked(res.data.liked)
-      onLikeChange?.(track.id, res.data.liked)
-    } catch {}
-    finally { setLoading(false) }
+
+    await toggleLike(track)
+
+    setLoading(false)
+
   }
 
+
   return (
+
     <div className="track-card">
-      {/* Thumbnail + play overlay */}
-      <div style={{ position: 'relative', flexShrink: 0, width: '80px', height: '80px' }}>
+
+      <div className="track-card__thumb-wrap">
+
         <img
           className="track-card__thumb"
-          src={track.thumbnailUrl || '/images/default-thumb.png'}
-          onError={e => { e.target.src = '/images/default-thumb.png' }}
+          src={
+            track.thumbnailUrl
+            || '/images/default-thumb.png'
+          }
+          onError={(e)=>{
+            e.target.src =
+              '/images/default-thumb.png'
+          }}
           alt={track.title}
         />
+
         <button
-          className="player-btn player-btn--play"
+          className="track-card__play"
           onMouseDown={handlePlay}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%',
-                   borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}
         >
-          <i className={`bi ${isActive && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'}`}></i>
+
+          <i
+            className={`bi ${
+              isActive && isPlaying
+                ? 'bi-pause-fill'
+                : 'bi-play-fill'
+            }`}
+          />
+
         </button>
+
       </div>
 
-      {/* Info */}
+
       <div className="track-card__info">
-        <Link className="track-card__title" to={`/tracks/${track.id}`}>
+
+        <Link
+          className="track-card__title"
+          to={`/tracks/${track.id}`}
+        >
           {track.title}
         </Link>
-        <div className="track-card__artist">{track.artist}</div>
-        <div className="track-card__meta">
-          <span><i className="bi bi-play"></i> {track.playCount ?? 0}</span>
-          <span><i className="bi bi-heart"></i> {track.likeCount ?? 0}</span>
-          {track.genre && <span className="track-card__genre">{track.genre}</span>}
+
+        <div className="track-card__artist">
+          {track.artist}
         </div>
+
+        <div className="track-card__meta">
+
+          <span>
+            <i className="bi bi-play"></i>
+            {track.playCount ?? 0}
+          </span>
+
+          <span>
+            <i className="bi bi-heart"></i>
+            {track.likeCount ?? 0}
+          </span>
+
+        </div>
+
       </div>
 
-      {/* Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+
+      <div className="track-card__actions">
+
         {user && (
+
           <button
             className="player-btn"
             onClick={handleLike}
             disabled={loading}
-            title="Thích"
           >
+
             <i
-              className={`bi ${liked ? 'bi-heart-fill' : 'bi-heart'}`}
-              style={{ color: liked ? 'var(--accent)' : '' }}
-            ></i>
+              className={`bi ${
+                liked
+                  ? 'bi-heart-fill'
+                  : 'bi-heart'
+              }`}
+              style={{
+                color:
+                  liked
+                    ? 'var(--accent)'
+                    : ''
+              }}
+            />
+
           </button>
+
         )}
-        {user && (
-          <button
-            className="player-btn"
-            onClick={e => { e.stopPropagation(); window._openPlaylistModal?.(track.id) }}
-            title="Thêm vào playlist"
-          >
-            <i className="bi bi-plus-circle"></i>
-          </button>
-        )}
+
       </div>
+
     </div>
+
   )
+
 }
-
-

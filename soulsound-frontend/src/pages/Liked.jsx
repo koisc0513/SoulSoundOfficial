@@ -2,15 +2,18 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { usersApi } from '../api/index.js'
 import TrackCard    from '../components/Track/TrackCard'
+import { usePlayer } from '../context/PlayerContext'
+
 
 
 export default function Liked() {
   const [tracks, setTracks]   = useState([])
+  const { setQueue } = usePlayer()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     usersApi.getLiked()
-      .then(res => setTracks(res.data))
+      .then(res => { setTracks(res.data); setQueue(res.data) })
       .finally(() => setLoading(false))
   }, [])
 
@@ -29,7 +32,7 @@ export default function Liked() {
               <Link className="btn btn-primary" to="/" style={{ display: 'inline-flex', marginTop: '20px' }}>Khám phá nhạc</Link>
             </div>
           : <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {tracks.map(t => <TrackCard key={t.id} track={t} likedIds={new Set(tracks.map(x=>x.id))} />)}
+              {tracks.map(t => <TrackCard key={t.id} track={t} likedIds={new Set(tracks.map(x=>x.id))} trackList={tracks} />)}
             </div>
       }
     </div>

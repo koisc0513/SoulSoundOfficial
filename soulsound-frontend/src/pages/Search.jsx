@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { searchApi, usersApi } from '../api/index.js'
 import { useAuth }   from '../context/AuthContext'
+import { usePlayer } from '../context/PlayerContext'
 import TrackCard     from '../components/Track/TrackCard'
 
 const GENRES = ['Pop','Rock','Hip-Hop','R&B','Electronic','Jazz','Classical','Indie','Lo-fi','Ballad','EDM','Metal','Acoustic','V-Pop','K-Pop','Khác']
@@ -9,6 +10,7 @@ const GENRES = ['Pop','Rock','Hip-Hop','R&B','Electronic','Jazz','Classical','In
 export default function Search() {
   const [params, setParams]   = useSearchParams()
   const { user }              = useAuth()
+  const { setQueue }          = usePlayer()
   const q     = params.get('q')    || ''
   const genre = params.get('genre')|| ''
   const type  = params.get('type') || 'track'
@@ -30,7 +32,7 @@ export default function Search() {
     try {
       const res = await searchApi.search(q, genre, type, page)
       if (type === 'user') { setUsers(res.data.users); setTotalPages(res.data.totalPages) }
-      else { setTracks(res.data.tracks); setTotalPages(res.data.totalPages) }
+      else { const t = res.data.tracks; setTracks(t); setTotalPages(res.data.totalPages); setQueue(t) }
       setCurPage(page)
     } finally { setLoading(false) }
   }
@@ -68,7 +70,7 @@ export default function Search() {
           {tracks.length === 0
             ? <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>Không tìm thấy bài hát nào.</div>
             : <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {tracks.map(t => <TrackCard key={t.id} track={t} likedIds={likedIds} />)}
+                {tracks.map(t => <TrackCard key={t.id} track={t} likedIds={likedIds} trackList={tracks} />)}
               </div>
           }
         </>

@@ -156,7 +156,7 @@ export default function Profile() {
           onError={e => { e.target.src = '/images/default-avatar.png' }}
           alt={u.fullName}
         />
-        <div style={{ flex: 1, paddingBottom: '8px' }}>
+        <div style={{ flex: 1, paddingBottom: '22px' }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800 }}>
             {u.fullName}
           </h1>

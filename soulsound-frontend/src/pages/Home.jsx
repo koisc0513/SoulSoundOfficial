@@ -10,7 +10,7 @@ const GENRES = ['Pop','Rock','Lo-fi','V-Pop','EDM','R&B','K-Pop','Indie','Jazz',
 
 export default function Home() {
   const { user } = useAuth()
-  const { playTrack } = usePlayer()
+  const { playTrack, setQueue } = usePlayer()
 
   const [tracks,        setTracks]        = useState([])
   const [totalPages,    setTotalPages]    = useState(0)
@@ -44,6 +44,7 @@ export default function Home() {
     try {
       const res = await tracksApi.getFeed(page)
       setTracks(res.data.tracks)
+      setQueue(res.data.tracks)
       setTotalPages(res.data.totalPages)
       setCurrentPage(page)
     } finally {
@@ -106,7 +107,7 @@ export default function Home() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {tracks.map(t => <TrackCard key={t.id} track={t} likedIds={likedIds} />)}
+              {tracks.map(t => <TrackCard key={t.id} track={t} likedIds={likedIds} trackList={tracks} />)}
             </div>
           )}
 
