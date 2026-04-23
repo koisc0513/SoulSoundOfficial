@@ -105,6 +105,10 @@ Frontend chạy tại:
 
 http://localhost:5173
 
+Admin Account:
+admin@soulsound.com
+Admin@123
+
 🔌 API Endpoints (Sample)
 ```
 Method	Endpoint	Description
