@@ -386,6 +386,43 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   opacity: 1;
 }
 
+/* ── GENRE BADGE (track-card__genre) ────────────────────────────── */
+.track-card__genre {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.16s ease, color 0.16s ease,
+              border-color 0.16s ease, transform 0.12s ease;
+  user-select: none;
+}
+.track-card__genre:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+.track-card__genre.genre--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.track-card__genre.genre--active:hover {
+  opacity: 0.85;
+  transform: none;
+}
+
 /* ── PLAYER BAR ──────────────────────────────────────────────────── */
 
 .player-bar {
@@ -668,21 +705,55 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .user-row__sub   { font-size: 0.75rem; color: var(--text-muted); }
 
 .user-row__follow {
-  padding: 4px 12px;
+  padding: 4px 14px;
+  min-width: 74px;
   background: transparent;
-  border: 1px solid var(--accent);
+  border: 1.5px solid var(--accent);
   border-radius: 20px;
   color: var(--accent);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background 0.18s ease, color 0.18s ease,
+              border-color 0.18s ease, opacity 0.18s ease;
   white-space: nowrap;
   margin-left: auto;
   flex-shrink: 0;
+  text-align: center;
 }
-.user-row__follow:hover { background: var(--accent); color: #fff; }
-.user-row__follow.following { background: var(--accent); color: #fff; }
+
+/* Follow → hover: fill solid */
+.user-row__follow:not(.following):hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Following state: solid filled */
+.user-row__follow.following {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Following → hover: show "Unfollow" via attr, turn red-ish */
+.user-row__follow.following:hover {
+  background: transparent;
+  border-color: #e05252;
+  color: #e05252;
+  font-size: 0;          /* hide text node */
+}
+.user-row__follow.following:hover::after {
+  content: 'Unfollow';
+  font-size: 0.75rem;
+}
+
+/* Loading / disabled */
+.user-row__follow.loading,
+.user-row__follow:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 
 /* ── PROFILE ─────────────────────────────────────────────────────── */
 .profile-banner {
@@ -911,4 +982,291 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 /* Scrollable queue list area */
 .queue-panel > *:not(.queue-panel__header):not(.queue-panel__footer) {
   overflow-y: auto;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PLAYLIST — CARD (Playlists.jsx list view)
+══════════════════════════════════════════════════════════════ */
+.pl-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color .2s ease, transform .2s ease;
+  cursor: pointer;
+}
+.pl-card__cover {
+  width: 100%;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, #1a0800, #2d1000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PLAYLIST DETAIL — Layout
+══════════════════════════════════════════════════════════════ */
+.playlist-detail {
+  max-width: 860px;
+  margin: 32px auto;
+  padding: 0 24px 120px; /* bottom padding for global player bar */
+}
+
+/* ── Header ── */
+.pl-header {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  background: var(--bg-surface);
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.pl-header-info { flex: 1; min-width: 0; }
+.pl-header-name {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.pl-header-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+.pl-header-stats span { display: flex; align-items: center; gap: 4px; }
+
+/* ── Cover ── */
+.pl-cover-wrap {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a0800, #3a1800);
+}
+.pl-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pl-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  color: var(--accent);
+  opacity: .5;
+}
+/* Actions overlay on hover */
+.pl-cover-actions {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+.pl-cover-wrap:hover .pl-cover-actions { opacity: 1; }
+.pl-cover-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  border: 1.5px solid rgba(255,255,255,.35);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease;
+}
+.pl-cover-btn:hover { background: var(--accent); border-color: var(--accent); }
+.pl-cover-btn--delete:hover { background: #e05252; border-color: #e05252; }
+
+/* ── Privacy badge + toggle ── */
+.pl-privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.pl-privacy-badge.public  { background: rgba(0,200,100,.12); color: #00c864; border: 1px solid rgba(0,200,100,.3); }
+.pl-privacy-badge.private { background: rgba(180,100,255,.12); color: #a96fff; border: 1px solid rgba(180,100,255,.3); }
+
+.pl-privacy-toggle {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 10px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.pl-privacy-toggle:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── btn-sm ── */
+.btn-sm { padding: 5px 12px; font-size: 0.8rem; height: auto; }
+
+/* ══════════════════════════════════════════════════════════════
+   PLAYLIST MINI PLAYER BAR
+══════════════════════════════════════════════════════════════ */
+.pl-mini-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.pl-mini-bar__track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.pl-mini-bar__thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.pl-mini-bar__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+.pl-mini-bar__artist {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.pl-mini-bar__hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.pl-mini-bar__controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PLAYLIST TRACK LIST ROWS
+══════════════════════════════════════════════════════════════ */
+.pl-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pl-track-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  transition: background .15s ease, border-color .15s ease, opacity .15s ease;
+  cursor: default;
+}
+.pl-track-row:hover                { background: var(--bg-elevated); border-color: var(--border); }
+.pl-track-row.active               { border-color: var(--accent); }
+.pl-track-row.active .pl-track-row__title { color: var(--accent); }
+.pl-track-row.dragging             { opacity: .4; border: 1px dashed var(--accent); }
+.pl-track-row.drag-over            { border-top: 2.5px solid var(--accent); }
+
+/* Drag handle */
+.pl-track-row__drag-handle {
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: grab;
+  flex-shrink: 0;
+  padding: 0 2px;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.pl-track-row:hover .pl-track-row__drag-handle { opacity: 1; }
+.pl-track-row__drag-handle:active  { cursor: grabbing; }
+
+.pl-track-row__idx {
+  width: 22px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.pl-track-row__thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.pl-track-row__info { flex: 1; min-width: 0; }
+.pl-track-row__title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+  transition: color .15s;
+}
+.pl-track-row__artist {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.pl-track-row__duration {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  min-width: 38px;
+  text-align: right;
+}
+.pl-track-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.pl-track-row:hover .pl-track-row__actions { opacity: 1; }
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .pl-header { flex-direction: column; }
+  .pl-cover-wrap { width: 120px; height: 120px; }
+  .pl-mini-bar { flex-direction: column; align-items: flex-start; }
 }

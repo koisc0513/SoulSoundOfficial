@@ -5,15 +5,37 @@ import { tracksApi } from '../api/index.js'
 
 const GENRES = ['Pop','Rock','Hip-Hop','R&B','Electronic','Jazz','Classical','Indie','Lo-fi','Ballad','EDM','Metal','Acoustic','V-Pop','K-Pop','Khác']
 
+/** Đọc thời lượng (giây) của file audio bằng HTMLAudioElement */
+function getAudioDuration(file) {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const audio = new Audio(url)
+    audio.addEventListener('loadedmetadata', () => {
+      URL.revokeObjectURL(url)
+      resolve(isFinite(audio.duration) ? Math.round(audio.duration) : null)
+    })
+    audio.addEventListener('error', () => { URL.revokeObjectURL(url); resolve(null) })
+  })
+}
+
 export default function TrackUpload() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ title:'', artist:'', genre:'Pop', description:'', privacy:'PUBLIC' })
   const [audioFile,     setAudioFile]     = useState(null)
   const [thumbnailFile, setThumbnailFile] = useState(null)
+  const [audioDuration, setAudioDuration] = useState(null)
   const [error,  setError]  = useState('')
   const [loading,setLoading]= useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleAudioChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setAudioFile(file)
+    const dur = await getAudioDuration(file)
+    setAudioDuration(dur)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -24,6 +46,7 @@ export default function TrackUpload() {
       Object.entries(form).forEach(([k,v]) => fd.append(k, v))
       fd.append('audioFile', audioFile)
       if (thumbnailFile) fd.append('thumbnailFile', thumbnailFile)
+      if (audioDuration != null) fd.append('duration', audioDuration)
       const res = await tracksApi.upload(fd)
       navigate(`/tracks/${res.data.id}`)
     } catch (err) {
@@ -69,10 +92,19 @@ export default function TrackUpload() {
           <label className="form-label">File nhạc (.mp3) *</label>
           <div className="upload-zone" style={{ border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', padding: '24px', textAlign: 'center', cursor: 'pointer' }}
             onClick={() => document.getElementById('audio-input').click()}>
-            {audioFile ? <><i className="bi bi-music-note" style={{ color: 'var(--accent)', fontSize: '1.5rem' }}></i><div style={{ marginTop: '8px' }}>{audioFile.name}</div></>
+            {audioFile
+              ? <>
+                  <i className="bi bi-music-note" style={{ color: 'var(--accent)', fontSize: '1.5rem' }}></i>
+                  <div style={{ marginTop: '8px' }}>{audioFile.name}</div>
+                  {audioDuration != null && (
+                    <div style={{ marginTop: '4px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <i className="bi bi-clock"></i> {Math.floor(audioDuration/60)}:{String(audioDuration%60).padStart(2,'0')}
+                    </div>
+                  )}
+                </>
               : <><i className="bi bi-cloud-upload" style={{ fontSize: '2rem', color: 'var(--text-muted)' }}></i><div style={{ marginTop: '8px', color: 'var(--text-muted)' }}>Click để chọn file MP3</div></>}
           </div>
-          <input id="audio-input" type="file" accept=".mp3,audio/mpeg" style={{ display: 'none' }} onChange={e=>setAudioFile(e.target.files[0])} />
+          <input id="audio-input" type="file" accept=".mp3,audio/mpeg" style={{ display: 'none' }} onChange={handleAudioChange} />
         </div>
 
         <div className="form-group" style={{ marginBottom: '24px' }}>

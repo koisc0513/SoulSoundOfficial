@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { tracksApi, usersApi } from '../api/index.js'
+import { tracksApi, usersApi, searchApi } from '../api/index.js'
 import { useAuth } from "../context/AuthContext"
 import { usePlayer } from "../context/PlayerContext"
 import TrackCard     from '../components/Track/TrackCard'
 import PlaylistModal from '../components/common/PlaylistModal'
 
-const GENRES = ['Pop','Rock','Lo-fi','V-Pop','EDM','R&B','K-Pop','Indie','Jazz','Ballad','Hip-Hop','Classical']
+const GENRES = ['Pop','Rock','Lo-fi','V-Pop','EDM','R&B','K-Pop','Indie','Jazz','Ballad','Hip-Hop','Classical','Acoustic','Electronic','Metal','Khác']
 
 export default function Home() {
   const { user } = useAuth()
@@ -20,6 +20,7 @@ export default function Home() {
   const [likedIds,      setLikedIds]      = useState(new Set())
   const [loading,       setLoading]       = useState(true)
   const [modalTrackId,  setModalTrackId]  = useState(null)
+  const [selectedGenre, setSelectedGenre] = useState('')
 
   // Expose openPlaylistModal để TrackCard gọi
   window._openPlaylistModal = setModalTrackId
@@ -40,6 +41,7 @@ export default function Home() {
   }, [user])
 
   const loadFeed = async (page) => {
+    setSelectedGenre('')
     setLoading(true)
     try {
       const res = await tracksApi.getFeed(page)
@@ -49,6 +51,31 @@ export default function Home() {
       setCurrentPage(page)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadByGenre = async (genre, page = 0) => {
+    setLoading(true)
+    try {
+      const res = await searchApi.search('', genre, 'track', page)
+      const t   = res.data.tracks || []
+      setTracks(t)
+      setQueue(t)
+      setTotalPages(res.data.totalPages || 1)
+      setCurrentPage(page)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGenreClick = (genre) => {
+    if (selectedGenre === genre) {
+      // Toggle off → về feed gốc
+      setSelectedGenre('')
+      loadFeed(0)
+    } else {
+      setSelectedGenre(genre)
+      loadByGenre(genre, 0)
     }
   }
 
@@ -91,12 +118,23 @@ export default function Home() {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <i className="bi bi-music-note-list" style={{ color: 'var(--accent)' }}></i> Tracks
+              <i className="bi bi-music-note-list" style={{ color: 'var(--accent)' }}></i>
+              {selectedGenre
+                ? <><span>Thể loại</span><span style={{ color: 'var(--accent)' }}>· {selectedGenre}</span></>
+                : 'Tracks'}
             </h2>
             <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              <Link to="/search" className="track-card__genre" style={{ cursor: 'pointer', fontSize: '0.72rem' }}>Tất cả</Link>
+              <button
+                className={`track-card__genre${!selectedGenre ? ' genre--active' : ''}`}
+                onClick={() => { setSelectedGenre(''); loadFeed(0) }}
+                style={{ fontSize: '0.72rem' }}
+              >Tất cả</button>
               {['Pop','Lo-fi','V-Pop','EDM','R&B'].map(g => (
-                <Link key={g} to={`/search?genre=${g}`} className="track-card__genre" style={{ cursor: 'pointer', fontSize: '0.72rem' }}>{g}</Link>
+                <button key={g}
+                  className={`track-card__genre${selectedGenre === g ? ' genre--active' : ''}`}
+                  onClick={() => handleGenreClick(g)}
+                  style={{ fontSize: '0.72rem' }}
+                >{g}</button>
               ))}
             </div>
           </div>
@@ -122,11 +160,18 @@ export default function Home() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="pagination" style={{ marginTop: '24px' }}>
-              {currentPage > 0 && <button className="page-btn" onClick={() => loadFeed(currentPage-1)}>‹</button>}
+              {currentPage > 0 && (
+                <button className="page-btn"
+                  onClick={() => selectedGenre ? loadByGenre(selectedGenre, currentPage-1) : loadFeed(currentPage-1)}>‹</button>
+              )}
               {[...Array(totalPages)].map((_,i) => (
-                <button key={i} className={`page-btn${i===currentPage?' active':''}`} onClick={() => loadFeed(i)}>{i+1}</button>
+                <button key={i} className={`page-btn${i===currentPage?' active':''}`}
+                  onClick={() => selectedGenre ? loadByGenre(selectedGenre, i) : loadFeed(i)}>{i+1}</button>
               ))}
-              {currentPage < totalPages-1 && <button className="page-btn" onClick={() => loadFeed(currentPage+1)}>›</button>}
+              {currentPage < totalPages-1 && (
+                <button className="page-btn"
+                  onClick={() => selectedGenre ? loadByGenre(selectedGenre, currentPage+1) : loadFeed(currentPage+1)}>›</button>
+              )}
             </div>
           )}
         </div>
@@ -164,7 +209,13 @@ export default function Home() {
           <div className="widget__title">🎸 Thể loại</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {GENRES.map(g => (
-              <Link key={g} to={`/search?genre=${g}`} className="track-card__genre" style={{ cursor: 'pointer' }}>{g}</Link>
+              <Link
+                key={g}
+                to={`/search?type=track&genre=${encodeURIComponent(g)}`}
+                className="track-card__genre"
+              >
+                {g}
+              </Link>
             ))}
           </div>
         </div>
@@ -177,15 +228,38 @@ export default function Home() {
 }
 
 function SuggestedUser({ user: u, currentUser }) {
-  const [following, setFollowing] = useState(false)
+  const [following,    setFollowing]    = useState(u.following ?? false)
+  const [followerCount, setFollowerCount] = useState(u.followerCount ?? 0)
+  const [loading,      setLoading]      = useState(false)
 
   const toggle = async () => {
-    if (!currentUser) return
+    if (!currentUser || loading) return
+
+    // Optimistic update
+    const wasFollowing   = following
+    const prevCount      = followerCount
+    setFollowing(!wasFollowing)
+    setFollowerCount(c => wasFollowing ? c - 1 : c + 1)
+    setLoading(true)
+
     try {
-      const res = await (await import('../api/index.js')).usersApi.follow(u.id)
+      const res = await usersApi.follow(u.id)
+      // Sync với giá trị thực từ server
       setFollowing(res.data.following)
-    } catch {}
+      setFollowerCount(res.data.followerCount)
+    } catch {
+      // Rollback nếu lỗi
+      setFollowing(wasFollowing)
+      setFollowerCount(prevCount)
+    } finally {
+      setLoading(false)
+    }
   }
+
+  let btnLabel
+  if (loading)       btnLabel = '...'
+  else if (following) btnLabel = 'Following'
+  else               btnLabel = 'Follow'
 
   return (
     <div className="user-row">
@@ -198,11 +272,16 @@ function SuggestedUser({ user: u, currentUser }) {
           style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {u.fullName}
         </Link>
-        <div className="user-row__sub">{u.followerCount} followers</div>
+        <div className="user-row__sub">{followerCount.toLocaleString()} followers</div>
       </div>
       {currentUser && (
-        <button className={`user-row__follow${following?' following':''}`} onClick={toggle}>
-          {following ? 'Following' : 'Follow'}
+        <button
+          className={`user-row__follow${following ? ' following' : ''}${loading ? ' loading' : ''}`}
+          onClick={toggle}
+          disabled={loading}
+          data-unfollow-label="Unfollow"
+        >
+          {btnLabel}
         </button>
       )}
     </div>

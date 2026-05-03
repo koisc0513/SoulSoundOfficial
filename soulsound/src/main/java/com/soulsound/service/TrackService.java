@@ -63,6 +63,7 @@ public class TrackService {
         track.setThumbnailUrl(thumbnailUrl);
         track.setPrivacy(dto.getPrivacy() != null ? dto.getPrivacy() : TrackPrivacy.PUBLIC);
         track.setUploader(uploader);
+        track.setDuration(dto.getDuration());
 
         return trackRepo.save(track);
     }

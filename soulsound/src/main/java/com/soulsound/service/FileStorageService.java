@@ -17,10 +17,11 @@ public class FileStorageService {
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
-    private static final String TRACK_DIR     = "tracks";
-    private static final String AVATAR_DIR    = "avatars";
-    private static final String THUMBNAIL_DIR = "thumbnails";
-    private static final String BANNER_DIR    = "banners";
+    private static final String TRACK_DIR          = "tracks";
+    private static final String AVATAR_DIR         = "avatars";
+    private static final String THUMBNAIL_DIR      = "thumbnails";
+    private static final String BANNER_DIR         = "banners";
+    private static final String PLAYLIST_COVER_DIR = "playlist-covers";
 
     private static final long MAX_AUDIO_SIZE = 50 * 1024 * 1024L;
     private static final long MAX_IMAGE_SIZE =  5 * 1024 * 1024L;
@@ -36,6 +37,7 @@ public class FileStorageService {
             Files.createDirectories(rootLocation.resolve(AVATAR_DIR));
             Files.createDirectories(rootLocation.resolve(THUMBNAIL_DIR));
             Files.createDirectories(rootLocation.resolve(BANNER_DIR));
+            Files.createDirectories(rootLocation.resolve(PLAYLIST_COVER_DIR));
             System.out.println(">>> Upload root: " + rootLocation);
         } catch (IOException e) {
             throw new RuntimeException("Không thể tạo thư mục upload: " + uploadDir, e);
@@ -62,6 +64,11 @@ public class FileStorageService {
     public String saveThumbnail(MultipartFile file) throws IOException {
         validateImage(file);
         return saveFile(file, THUMBNAIL_DIR);
+    }
+
+    public String savePlaylistCover(MultipartFile file) throws IOException {
+        validateImage(file);
+        return saveFile(file, PLAYLIST_COVER_DIR);
     }
 
     public void deleteFile(String fileUrl) {

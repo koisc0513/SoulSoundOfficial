@@ -48,6 +48,10 @@ public class Track {
     @Column(name = "play_count", nullable = false)
     private Long playCount = 0L;                 // chỉ tăng khi click play
 
+    /** Thời lượng tính bằng giây (do frontend gửi lên khi upload) */
+    @Column(name = "duration")
+    private Integer duration;
+
     /** Cho phép Admin ẩn track mà không xóa */
     @Column(name = "is_hidden", nullable = false)
     private boolean hidden = false;
@@ -108,6 +112,9 @@ public class Track {
 
     public Long getPlayCount() { return playCount; }
     public void setPlayCount(Long playCount) { this.playCount = playCount; }
+
+    public Integer getDuration() { return duration; }
+    public void setDuration(Integer duration) { this.duration = duration; }
 
     public boolean isHidden() { return hidden; }
     public void setHidden(boolean hidden) { this.hidden = hidden; }

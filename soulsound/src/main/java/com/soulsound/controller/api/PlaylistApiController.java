@@ -2,27 +2,32 @@ package com.soulsound.controller.api;
 
 import com.soulsound.entity.Playlist;
 import com.soulsound.entity.User;
+import com.soulsound.service.FileStorageService;
 import com.soulsound.service.PlaylistService;
 import com.soulsound.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/playlists")
 public class PlaylistApiController {
 
-    private final PlaylistService playlistService;
-    private final UserService     userService;
+    private final PlaylistService    playlistService;
+    private final UserService        userService;
+    private final FileStorageService fileStorageService;
 
-    public PlaylistApiController(PlaylistService playlistService, UserService userService) {
-        this.playlistService = playlistService;
-        this.userService     = userService;
+    public PlaylistApiController(PlaylistService playlistService,
+                                 UserService userService,
+                                 FileStorageService fileStorageService) {
+        this.playlistService    = playlistService;
+        this.userService        = userService;
+        this.fileStorageService = fileStorageService;
     }
 
     // GET /api/playlists
@@ -44,6 +49,8 @@ public class PlaylistApiController {
             if (principal != null) {
                 User user = userService.findByEmail(principal.getUsername());
                 dto.put("isOwner", pl.getOwner().getId().equals(user.getId()));
+            } else {
+                dto.put("isOwner", false);
             }
             return ResponseEntity.ok(dto);
         } catch (Exception e) {
@@ -124,25 +131,81 @@ public class PlaylistApiController {
         }
     }
 
+    // PUT /api/playlists/{id}/cover  — multipart/form-data, field "cover"
+    @PutMapping("/{id}/cover")
+    public ResponseEntity<?> updateCover(
+            @PathVariable Long id,
+            @RequestParam("cover") MultipartFile cover,
+            @AuthenticationPrincipal UserDetails principal) {
+        try {
+            User user = userService.findByEmail(principal.getUsername());
+            String url = fileStorageService.savePlaylistCover(cover);
+            // Xóa ảnh cũ nếu có
+            Playlist before = playlistService.findById(id);
+            if (before.getCoverUrl() != null) fileStorageService.deleteFile(before.getCoverUrl());
+            Playlist pl = playlistService.updateCover(id, url, user.getId());
+            return ResponseEntity.ok(Map.of("success", true, "coverUrl", pl.getCoverUrl()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // DELETE /api/playlists/{id}/cover
+    @DeleteMapping("/{id}/cover")
+    public ResponseEntity<?> deleteCover(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails principal) {
+        try {
+            User user = userService.findByEmail(principal.getUsername());
+            Playlist before = playlistService.findById(id);
+            if (before.getCoverUrl() != null) fileStorageService.deleteFile(before.getCoverUrl());
+            playlistService.deleteCover(id, user.getId());
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // PUT /api/playlists/{id}/reorder — body: { "trackIds": [3, 1, 2] }
+    @PutMapping("/{id}/reorder")
+    public ResponseEntity<?> reorder(
+            @PathVariable Long id,
+            @RequestBody Map<String, List<Long>> body,
+            @AuthenticationPrincipal UserDetails principal) {
+        try {
+            User user = userService.findByEmail(principal.getUsername());
+            playlistService.reorder(id, body.get("trackIds"), user.getId());
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // ── DTOs ───────────────────────────────────────────────────────
+
     private Map<String, Object> playlistDto(Playlist p) {
-        return Map.of(
-                "id",         p.getId(),
-                "name",       p.getName(),
-                "description", p.getDescription() != null ? p.getDescription() : "",
-                "trackCount", p.getTrackCount()
-        );
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id",          p.getId());
+        m.put("name",        p.getName());
+        m.put("description", p.getDescription() != null ? p.getDescription() : "");
+        m.put("trackCount",  p.getTrackCount());
+        m.put("coverUrl",    p.getCoverUrl() != null ? p.getCoverUrl() : "");
+        return m;
     }
 
     private Map<String, Object> playlistDetailDto(Playlist p) {
-        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>(playlistDto(p));
-        m.put("tracks", p.getTracks().stream().map(t -> Map.of(
-                "id",           t.getId(),
-                "title",        t.getTitle(),
-                "artist",       t.getArtist(),
-                "thumbnailUrl", t.getThumbnailUrl() != null ? t.getThumbnailUrl() : "",
-                "fileUrl",      t.getFileUrl(),
-                "playCount",    t.getPlayCount()
-        )).collect(Collectors.toList()));
+        Map<String, Object> m = new LinkedHashMap<>(playlistDto(p));
+        m.put("tracks", p.getTracks().stream().map(t -> {
+            Map<String, Object> tm = new LinkedHashMap<>();
+            tm.put("id",           t.getId());
+            tm.put("title",        t.getTitle());
+            tm.put("artist",       t.getArtist() != null ? t.getArtist() : "");
+            tm.put("thumbnailUrl", t.getThumbnailUrl() != null ? t.getThumbnailUrl() : "");
+            tm.put("fileUrl",      t.getFileUrl());
+            tm.put("playCount",    t.getPlayCount());
+            tm.put("duration",     t.getDuration() != null ? t.getDuration() : 0);
+            return tm;
+        }).collect(Collectors.toList()));
         m.put("owner", Map.of(
                 "id",       p.getOwner().getId(),
                 "fullName", p.getOwner().getFullName(),

@@ -107,7 +107,7 @@ export default function Profile() {
             <button
                           onClick={() => document.getElementById('banner-file-input').click()}
                           style={{
-                            position: 'absolute', top: '12px', right: '25px',
+                            position: 'absolute', top: '12px', right: '23px',
                             display: 'flex', alignItems: 'center', gap: '6px',
                             background: 'rgba(0,0,0,0.55)',
                             backdropFilter: 'blur(6px)',
@@ -157,7 +157,7 @@ export default function Profile() {
           alt={u.fullName}
         />
         <div style={{ flex: 1, paddingBottom: '22px' }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800 }}>
+          <h1 className="profile-name">
             {u.fullName}
           </h1>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '2px' }}>
@@ -165,7 +165,7 @@ export default function Profile() {
           </div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px',
-                      alignItems: 'flex-end', paddingBottom: '8px' }}>
+                      alignItems: 'flex-end', paddingBottom: '4px' }}>
           {isOwner ? (
             <Link className="btn btn-outline" to="/profile/edit">
               <i className="bi bi-pencil"></i> Chỉnh sửa hồ sơ

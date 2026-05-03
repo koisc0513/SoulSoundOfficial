@@ -84,13 +84,17 @@ export const searchApi = {
 // src/api/playlists.js
 // ─────────────────────────────────────────────────────────────
 export const playlistsApi = {
-  getAll:      ()               => api.get('/playlists'),
-  getById:     (id)             => api.get(`/playlists/${id}`),
-  create:      (name, description) => api.post('/playlists', { name, description }),
-  update:      (id, name, description) => api.put(`/playlists/${id}`, { name, description }),
-  delete:      (id)             => api.delete(`/playlists/${id}`),
-  addTrack:    (id, trackId)    => api.post(`/playlists/${id}/tracks/${trackId}`),
-  removeTrack: (id, trackId)    => api.delete(`/playlists/${id}/tracks/${trackId}`),
+  getAll:       ()                  => api.get('/playlists'),
+  getById:      (id)                => api.get(`/playlists/${id}`),
+  create:       (name, description) => api.post('/playlists', { name, description }),
+  update:       (id, name, description) => api.put(`/playlists/${id}`, { name, description }),
+  delete:       (id)                => api.delete(`/playlists/${id}`),
+  addTrack:     (id, trackId)       => api.post(`/playlists/${id}/tracks/${trackId}`),
+  removeTrack:  (id, trackId)       => api.delete(`/playlists/${id}/tracks/${trackId}`),
+  updateCover:  (id, formData)      => api.put(`/playlists/${id}/cover`, formData,
+                                         { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteCover:  (id)                => api.delete(`/playlists/${id}/cover`),
+  reorder:      (id, trackIds)      => api.put(`/playlists/${id}/reorder`, { trackIds }),
 }
 
 

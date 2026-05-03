@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { tracksApi } from '../api/index.js'
 import { useAuth }   from '../context/AuthContext'
 import { usePlayer } from '../context/PlayerContext'
+import PlaylistModal from '../components/common/PlaylistModal'
 
 export default function TrackDetail() {
   const { id }     = useParams()
@@ -14,6 +15,7 @@ export default function TrackDetail() {
   const [liked,   setLiked]   = useState(false)
   const [comment, setComment] = useState('')
   const [loading, setLoading] = useState(true)
+  const [showPlModal, setShowPlModal] = useState(false)
 
   useEffect(() => {
     tracksApi.getById(id)
@@ -73,9 +75,14 @@ export default function TrackDetail() {
               {isActive && isPlaying ? ' Dừng' : ' Phát'}
             </button>
             {user && (
-              <button className={`btn ${liked ? 'btn-primary' : 'btn-outline'}`} onClick={handleLike}>
-                <i className={`bi ${liked ? 'bi-heart-fill' : 'bi-heart'}`}></i> {liked ? 'Đã thích' : 'Thích'}
-              </button>
+              <>
+                <button className={`btn ${liked ? 'btn-primary' : 'btn-outline'}`} onClick={handleLike}>
+                  <i className={`bi ${liked ? 'bi-heart-fill' : 'bi-heart'}`}></i> {liked ? 'Đã thích' : 'Thích'}
+                </button>
+                <button className="btn btn-outline" onClick={() => setShowPlModal(true)}>
+                  <i className="bi bi-collection-play"></i> Thêm vào playlist
+                </button>
+              </>
             )}
             {track.isOwner && (
               <>
@@ -128,6 +135,13 @@ export default function TrackDetail() {
           ))}
         </div>
       </div>
+
+      {showPlModal && (
+        <PlaylistModal
+          trackId={Number(id)}
+          onClose={() => setShowPlModal(false)}
+        />
+      )}
     </div>
   )
 }

@@ -91,6 +91,46 @@ public class PlaylistService {
         return playlistRepo.save(playlist);
     }
 
+    // ── Cập nhật ảnh bìa ────────────────────────────────────────────
+
+    public Playlist updateCover(Long playlistId, String coverUrl, Long requesterId) {
+        Playlist playlist = findById(playlistId);
+        checkOwner(playlist, requesterId);
+        playlist.setCoverUrl(coverUrl);
+        return playlistRepo.save(playlist);
+    }
+
+    public Playlist deleteCover(Long playlistId, Long requesterId) {
+        Playlist playlist = findById(playlistId);
+        checkOwner(playlist, requesterId);
+        playlist.setCoverUrl(null);
+        return playlistRepo.save(playlist);
+    }
+
+    // ── Sắp xếp lại thứ tự bài hát ──────────────────────────────────
+
+    public Playlist reorder(Long playlistId, java.util.List<Long> orderedTrackIds, Long requesterId) {
+        Playlist playlist = findById(playlistId);
+        checkOwner(playlist, requesterId);
+
+        java.util.Map<Long, Track> byId = new java.util.LinkedHashMap<>();
+        for (Track t : playlist.getTracks()) byId.put(t.getId(), t);
+
+        java.util.List<Track> reordered = new java.util.ArrayList<>();
+        for (Long tid : orderedTrackIds) {
+            Track t = byId.get(tid);
+            if (t != null) reordered.add(t);
+        }
+        // Thêm lại track không có trong list (phòng thiếu)
+        for (Track t : playlist.getTracks()) {
+            if (!orderedTrackIds.contains(t.getId())) reordered.add(t);
+        }
+
+        playlist.getTracks().clear();
+        playlist.getTracks().addAll(reordered);
+        return playlistRepo.save(playlist);
+    }
+
     // ── Truy vấn ────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)

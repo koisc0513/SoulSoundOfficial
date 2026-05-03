@@ -20,6 +20,9 @@ public class TrackUploadDto {
 
     private TrackPrivacy privacy = TrackPrivacy.PUBLIC;
 
+    /** Thời lượng giây — frontend tính từ AudioElement rồi gửi lên */
+    private Integer duration;
+
     // File fields (không validate ở đây — validate trong Service)
     private MultipartFile audioFile;
     private MultipartFile thumbnailFile;
@@ -35,6 +38,8 @@ public class TrackUploadDto {
     public void         setDescription(String description)   { this.description = description; }
     public TrackPrivacy getPrivacy()                         { return privacy; }
     public void         setPrivacy(TrackPrivacy privacy)     { this.privacy = privacy; }
+    public Integer getDuration()                             { return duration; }
+    public void    setDuration(Integer duration)             { this.duration = duration; }
     public MultipartFile getAudioFile()                      { return audioFile; }
     public void          setAudioFile(MultipartFile f)       { this.audioFile = f; }
     public MultipartFile getThumbnailFile()                  { return thumbnailFile; }

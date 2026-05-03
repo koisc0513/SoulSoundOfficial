@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { usePlayer } from '../../context/PlayerContext'
 import { useAuth } from '../../context/AuthContext'
+import PlaylistModal from '../common/PlaylistModal'
 
 export default function TrackCard({ track, trackList }) {
 
@@ -18,7 +19,8 @@ export default function TrackCard({ track, trackList }) {
 
   const { user } = useAuth()
 
-  const [loading, setLoading] = useState(false)
+  const [loading,     setLoading]     = useState(false)
+  const [showPlModal, setShowPlModal] = useState(false)
 
   const liked =
     likedTracks.includes(track.id)
@@ -119,31 +121,51 @@ export default function TrackCard({ track, trackList }) {
 
         {user && (
 
-          <button
-            className="player-btn"
-            onClick={handleLike}
-            disabled={loading}
-          >
+          <>
 
-            <i
-              className={`bi ${
-                liked
-                  ? 'bi-heart-fill'
-                  : 'bi-heart'
-              }`}
-              style={{
-                color:
+            <button
+              className="player-btn"
+              onClick={handleLike}
+              disabled={loading}
+              title={liked ? 'Bỏ thích' : 'Thích'}
+            >
+
+              <i
+                className={`bi ${
                   liked
-                    ? 'var(--accent)'
-                    : ''
-              }}
-            />
+                    ? 'bi-heart-fill'
+                    : 'bi-heart'
+                }`}
+                style={{
+                  color:
+                    liked
+                      ? 'var(--accent)'
+                      : ''
+                }}
+              />
 
-          </button>
+            </button>
+
+            <button
+              className="player-btn"
+              onClick={(e) => { e.stopPropagation(); setShowPlModal(true) }}
+              title="Thêm vào playlist"
+            >
+              <i className="bi bi-collection-play" />
+            </button>
+
+          </>
 
         )}
 
       </div>
+
+      {showPlModal && (
+        <PlaylistModal
+          trackId={track.id}
+          onClose={() => setShowPlModal(false)}
+        />
+      )}
 
     </div>
 

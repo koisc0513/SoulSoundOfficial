@@ -6,7 +6,7 @@ import api from '../api/index.js'
 export default function Register() {
   const { login } = useAuth()
   const navigate  = useNavigate()
-  const [form, setForm]     = useState({ fullName:'', email:'', password:'', confirmPassword:'', phoneNumber:'' })
+  const [form, setForm]     = useState({ fullName:'', email:'', birthYear:'', phoneNumber:'', password:'', confirmPassword:'' })
   const [error, setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -17,7 +17,8 @@ export default function Register() {
     if (form.password !== form.confirmPassword) { setError('Mật khẩu xác nhận không khớp.'); return }
     setLoading(true); setError('')
     try {
-      const res = await api.post('/auth/register', form)
+      const payload = { ...form, birthYear: form.birthYear ? parseInt(form.birthYear) : null }
+      const res = await api.post('/auth/register', payload)
       login(res.data.token, res.data.user)
       navigate('/')
     } catch (err) {
@@ -36,13 +37,45 @@ export default function Register() {
         {error && <div style={{ background: 'rgba(255,50,50,0.1)', color: '#ff4444', padding: '12px', borderRadius: '8px', marginBottom: '16px', borderLeft: '3px solid #ff4444', fontSize: '0.875rem' }}>{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          {[['fullName','Họ và tên','text'],['email','Email','email'],['phoneNumber','Số điện thoại (tuỳ chọn)','tel'],
-            ['password','Mật khẩu','password'],['confirmPassword','Xác nhận mật khẩu','password']].map(([k,label,type]) => (
-            <div className="form-group" key={k} style={{ marginBottom: '14px' }}>
-              <label className="form-label">{label}</label>
-              <input className="form-control" type={type} value={form[k]} onChange={e=>set(k,e.target.value)} required={k!=='phoneNumber'} />
-            </div>
-          ))}
+          <div className="form-group" style={{ marginBottom: '14px' }}>
+            <label className="form-label">Họ và tên</label>
+            <input className="form-control" type="text" value={form.fullName} onChange={e=>set('fullName',e.target.value)} required />
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '14px' }}>
+            <label className="form-label">Email</label>
+            <input className="form-control" type="email" value={form.email} onChange={e=>set('email',e.target.value)} required />
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '14px' }}>
+            <label className="form-label">Năm sinh</label>
+            <input
+              className="form-control"
+              type="number"
+              value={form.birthYear}
+              onChange={e=>set('birthYear',e.target.value)}
+              placeholder="VD: 2000"
+              min="1900"
+              max="2015"
+              required
+            />
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '14px' }}>
+            <label className="form-label">Số điện thoại (tuỳ chọn)</label>
+            <input className="form-control" type="tel" value={form.phoneNumber} onChange={e=>set('phoneNumber',e.target.value)} />
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '14px' }}>
+            <label className="form-label">Mật khẩu</label>
+            <input className="form-control" type="password" value={form.password} onChange={e=>set('password',e.target.value)} required />
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '14px' }}>
+            <label className="form-label">Xác nhận mật khẩu</label>
+            <input className="form-control" type="password" value={form.confirmPassword} onChange={e=>set('confirmPassword',e.target.value)} required />
+          </div>
+
           <button className="btn btn-primary" type="submit" disabled={loading}
             style={{ width: '100%', justifyContent: 'center', marginTop: '8px' }}>
             {loading ? <><i className="bi bi-arrow-repeat spin"></i> Đang đăng ký...</> : 'Đăng ký'}

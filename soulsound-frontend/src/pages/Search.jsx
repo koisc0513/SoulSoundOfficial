@@ -5,7 +5,7 @@ import { useAuth }   from '../context/AuthContext'
 import { usePlayer } from '../context/PlayerContext'
 import TrackCard     from '../components/Track/TrackCard'
 
-const GENRES = ['Pop','Rock','Hip-Hop','R&B','Electronic','Jazz','Classical','Indie','Lo-fi','Ballad','EDM','Metal','Acoustic','V-Pop','K-Pop','Khác']
+const GENRES = ['Pop','Rock','Lo-fi','V-Pop','EDM','R&B','K-Pop','Indie','Jazz','Ballad','Hip-Hop','Classical','Acoustic','Electronic','Metal','Khác']
 
 export default function Search() {
   const [params, setParams]   = useSearchParams()
@@ -42,24 +42,48 @@ export default function Search() {
   return (
     <div style={{ maxWidth: '900px', margin: '24px auto', padding: '0 24px' }}>
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <button className={`btn${type==='track'?' btn-primary':' btn-outline'}`} onClick={() => nav({type:'track'})}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <button className={`btn${type==='track'?' btn-primary':' btn-outline'}`} onClick={() => nav({type:'track', genre:''})}>
           <i className="bi bi-music-note"></i> Bài hát
         </button>
-        <button className={`btn${type==='user'?' btn-primary':' btn-outline'}`} onClick={() => nav({type:'user'})}>
+        <button className={`btn${type==='user'?' btn-primary':' btn-outline'}`} onClick={() => nav({type:'user', genre:''})}>
           <i className="bi bi-people"></i> Người dùng
         </button>
 
+        {/* Genre select (desktop-friendly, kept for direct genre pick) */}
         {type === 'track' && (
-          <>
-            <select className="form-control" style={{ height: '38px', width: 'auto', marginLeft: 'auto' }}
-              value={genre} onChange={e => nav({genre: e.target.value})}>
-              <option value="">Tất cả thể loại</option>
-              {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
-            </select>
-          </>
+          <select
+            className="form-control"
+            style={{ height: '38px', width: 'auto', marginLeft: 'auto' }}
+            value={genre}
+            onChange={e => nav({ genre: e.target.value })}
+          >
+            <option value="">Tất cả thể loại</option>
+            {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+          </select>
         )}
       </div>
+
+      {/* Genre badge pills — visible when type=track */}
+      {type === 'track' && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
+          <button
+            className={`track-card__genre${!genre ? ' genre--active' : ''}`}
+            onClick={() => nav({ genre: '' })}
+          >
+            Tất cả
+          </button>
+          {GENRES.map(g => (
+            <button
+              key={g}
+              className={`track-card__genre${genre === g ? ' genre--active' : ''}`}
+              onClick={() => nav({ genre: genre === g ? '' : g })}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      )}
 
       {q && <h2 style={{ marginBottom: '16px', fontSize: '1rem', color: 'var(--text-muted)' }}>Kết quả cho: "<span style={{ color: 'var(--text-primary)' }}>{q}</span>"</h2>}
 
