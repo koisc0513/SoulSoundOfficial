@@ -2,6 +2,7 @@ package com.soulsound.config;
 
 import com.soulsound.security.JwtAuthFilter;
 import com.soulsound.service.CustomUserDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -59,18 +60,37 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // Trả về 401 (không phải 403) khi chưa đăng nhập
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, e) ->
+                                res.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+                                        "Vui lòng đăng nhập để tiếp tục."))
+                )
+
                 .authorizeHttpRequests(auth -> auth
-                        // Public GET endpoints
+
+                        // ── Public GET ──────────────────────────────────
                         .requestMatchers(HttpMethod.GET,
-                                "/api/tracks", "/api/tracks/**",
-                                "/api/search", "/api/users/**",
-                                "/uploads/**", "/images/**"
+                                "/api/tracks",
+                                "/api/tracks/**",
+                                "/api/search",
+                                "/api/users/**",
+                                "/uploads/**",
+                                "/images/**"
                         ).permitAll()
-                        // Auth endpoints
+
+                        // ── Auth (đăng ký / đăng nhập) ──────────────────
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Admin only
+
+                        // ── Notifications (yêu cầu đăng nhập) ───────────
+                        .requestMatchers(HttpMethod.GET,  "/api/notifications/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/notifications/**").authenticated()
+
+                        // ── Admin only ───────────────────────────────────
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // Everything else requires JWT
+
+                        // ── Mọi thứ còn lại đều cần JWT ─────────────────
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -81,12 +101,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // React dev server
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "http://localhost:3000"
         ));
-        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 

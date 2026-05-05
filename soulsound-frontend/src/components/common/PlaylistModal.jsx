@@ -46,7 +46,7 @@ export default function PlaylistModal({ trackId, onClose }) {
                     borderRadius: 'var(--radius-lg)', padding: '28px', width: '380px',
                     maxHeight: '80vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-          <h3 style={{ fontFamily: 'var(--font-display)' }}>🎵 Thêm vào Playlist</h3>
+          <h3 style={{ fontFamily: 'var(--font-display)' }}> Thêm vào Playlist</h3>
           <button className="player-btn" onClick={onClose}>
             <i className="bi bi-x-lg"></i>
           </button>

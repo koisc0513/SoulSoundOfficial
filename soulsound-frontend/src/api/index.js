@@ -68,6 +68,7 @@ export const usersApi = {
   getLiked:     ()         => api.get('/users/liked'),
   getHistory:   (page = 0) => api.get(`/users/history?page=${page}`),
   getSuggested: ()         => api.get('/users/suggested'),
+  getOverview:  (days = 7) => api.get(`/users/overview?days=${days}`),
 }
 
 
@@ -107,4 +108,15 @@ export const adminApi = {
   getTracks:    (page = 0) => api.get(`/admin/tracks?page=${page}`),
   blockUser:    (id) => api.post(`/admin/users/${id}/toggle-block`),
   hideTrack:    (id) => api.post(`/admin/tracks/${id}/toggle-hidden`),
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// src/api/notifications.js  ← NEW
+// ─────────────────────────────────────────────────────────────
+export const notificationsApi = {
+  getAll:        (page = 0) => api.get(`/notifications?page=${page}`),
+  getUnreadCount:()         => api.get('/notifications/unread-count'),
+  readAll:       ()         => api.post('/notifications/read-all'),
+  readOne:       (id)       => api.post(`/notifications/${id}/read`),
 }

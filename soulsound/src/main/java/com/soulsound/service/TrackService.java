@@ -21,19 +21,22 @@ public class TrackService {
     private final ListeningHistoryRepository historyRepo;
     private final UserRepository           userRepo;
     private final FileStorageService       fileStorage;
+    private final NotificationService      notifService;   // ← NEW
 
     public TrackService(TrackRepository trackRepo,
                         LikeRepository likeRepo,
                         CommentRepository commentRepo,
                         ListeningHistoryRepository historyRepo,
                         UserRepository userRepo,
-                        FileStorageService fileStorage) {
-        this.trackRepo   = trackRepo;
-        this.likeRepo    = likeRepo;
-        this.commentRepo = commentRepo;
-        this.historyRepo = historyRepo;
-        this.userRepo    = userRepo;
-        this.fileStorage = fileStorage;
+                        FileStorageService fileStorage,
+                        NotificationService notifService) {  // ← NEW
+        this.trackRepo    = trackRepo;
+        this.likeRepo     = likeRepo;
+        this.commentRepo  = commentRepo;
+        this.historyRepo  = historyRepo;
+        this.userRepo     = userRepo;
+        this.fileStorage  = fileStorage;
+        this.notifService = notifService;                   // ← NEW
     }
 
     // ── Upload bài hát mới ──────────────────────────────────────────
@@ -65,7 +68,12 @@ public class TrackService {
         track.setUploader(uploader);
         track.setDuration(dto.getDuration());
 
-        return trackRepo.save(track);
+        Track saved = trackRepo.save(track);
+
+        // ── Thông báo upload thành công ──────────────────────────
+        notifService.notifyTrackUploaded(saved);
+
+        return saved;
     }
 
     // ── Chỉnh sửa track ─────────────────────────────────────────────
@@ -178,6 +186,8 @@ public class TrackService {
         } else {
             likeRepo.save(new Like(user, track));
             liked = true;
+            // ── Thông báo like (chỉ khi like mới, không phải unlike) ──
+            notifService.notifyTrackLiked(user, track);
         }
 
         long likeCount = likeRepo.countByTrackId(trackId);
@@ -199,7 +209,12 @@ public class TrackService {
                 .orElseThrow(() -> new NoSuchElementException("User không tồn tại."));
 
         Comment comment = new Comment(content.trim(), user, track);
-        return commentRepo.save(comment);
+        Comment saved   = commentRepo.save(comment);
+
+        // ── Thông báo comment mới ────────────────────────────────
+        notifService.notifyNewComment(user, track, content.trim());
+
+        return saved;
     }
 
     public void deleteComment(Long commentId, Long requesterId) {
@@ -295,4 +310,15 @@ public class TrackService {
 
     @Transactional(readOnly = true)
     public Long sumAllPlayCounts(){ return trackRepo.sumAllPlayCounts(); }
+
+    @Transactional(readOnly = true)
+    public long sumPlayCountByUser(Long userId) {
+        Long sum = trackRepo.sumPlayCountByUploaderId(userId);
+        return sum != null ? sum : 0L;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Track> getTopTracksByUser(Long userId, int limit) {
+        return trackRepo.findTopTracksByUploaderId(userId, PageRequest.of(0, limit));
+    }
 }

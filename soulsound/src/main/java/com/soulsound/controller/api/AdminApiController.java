@@ -3,6 +3,7 @@ package com.soulsound.controller.api;
 
 import com.soulsound.entity.*;
 import com.soulsound.repository.TrackRepository;
+import com.soulsound.service.NotificationService;
 import com.soulsound.service.TrackService;
 import com.soulsound.service.UserService;
 import org.springframework.data.domain.*;
@@ -16,12 +17,16 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/admin")
 public class AdminApiController {
 
-    private final UserService  userService;
-    private final TrackService trackService;
+    private final UserService         userService;
+    private final TrackService        trackService;
+    private final NotificationService notifService;  // ← NEW
 
-    public AdminApiController(UserService userService, TrackService trackService) {
+    public AdminApiController(UserService userService,
+                              TrackService trackService,
+                              NotificationService notifService) {  // ← NEW
         this.userService  = userService;
         this.trackService = trackService;
+        this.notifService = notifService;             // ← NEW
     }
 
     // GET /api/admin/dashboard
@@ -71,6 +76,12 @@ public class AdminApiController {
         try {
             userService.toggleBlockUser(id);
             User user = userService.findById(id);
+
+            // ── Thông báo khi tài khoản bị khóa (không thông báo khi mở khóa) ──
+            if (user.getStatus() == UserStatus.BLOCKED) {
+                notifService.notifyAccountBanned(user);
+            }
+
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "status",  user.getStatus().name()
@@ -124,6 +135,12 @@ public class AdminApiController {
         try {
             trackService.toggleHidden(id);
             Track track = trackService.findById(id);
+
+            // ── Thông báo khi bài bị ẩn (không thông báo khi hiện lại) ──
+            if (track.isHidden()) {
+                notifService.notifyTrackHidden(track);
+            }
+
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "hidden",  track.isHidden()

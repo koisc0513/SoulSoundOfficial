@@ -18,6 +18,7 @@ export default function Home() {
   const [recentPlayed,  setRecentPlayed]  = useState([])
   const [suggested,     setSuggested]     = useState([])
   const [likedIds,      setLikedIds]      = useState(new Set())
+  const [overviewPlays, setOverviewPlays] = useState(null)
   const [loading,       setLoading]       = useState(true)
   const [modalTrackId,  setModalTrackId]  = useState(null)
   const [selectedGenre, setSelectedGenre] = useState('')
@@ -32,6 +33,7 @@ export default function Home() {
       usersApi.getHistory(0).then(r => {
         setRecentPlayed(r.data.histories?.slice(0,6).map(h=>h.track) ?? [])
       }).catch(()=>{})
+      usersApi.getOverview(7).then(r => setOverviewPlays(r.data)).catch(()=>{})
       usersApi.getLiked().then(r => {
         setLikedIds(new Set(r.data.map(t=>t.id)))
       }).catch(()=>{})
@@ -179,10 +181,32 @@ export default function Home() {
 
       {/* Sidebar */}
       <aside className="layout__sidebar">
+      {/* Overview widget */}
+      {user && (
+        <div className="widget">
+          <div className="widget__title"><i className="bi bi-bar-chart-fill"></i> Tổng quan</div>
+          {overviewPlays ? (
+            <>
+              <div className="widget-overview__greeting">
+                <span>Hey <strong>{overviewPlays.fullName}</strong>, you have</span>
+                <strong className="widget-overview__plays">{overviewPlays.totalPlays} play{overviewPlays.totalPlays !== 1 ? 's' : ''}</strong>
+                <span>last 7 days</span>
+              </div>
+              <Link className="btn btn-outline" to="/overview" style={{ width: '100%', justifyContent: 'center', marginTop: '10px' }}>
+                <i className="bi bi-arrow-right"></i> Tổng quan
+              </Link>
+            </>
+          ) : (
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Chưa có dữ liệu.</p>
+          )}
+        </div>
+      )}
+
         {/* Suggested */}
         <div className="widget">
           <div className="widget__title"><i className="bi bi-people"></i> Gợi ý theo dõi</div>
-          {suggested.length > 0 ? suggested.map(u => (
+          {suggested.filter(u => u.fullName !== 'SoulSound Admin').length > 0
+            ? suggested.filter(u => u.fullName !== 'SoulSound Admin').map(u => (
             <SuggestedUser key={u.id} user={u} currentUser={user} />
           )) : (
             <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem', textAlign: 'center', padding: '8px 0' }}>Chưa có gợi ý.</div>
@@ -286,4 +310,25 @@ function SuggestedUser({ user: u, currentUser }) {
       )}
     </div>
   )
+      {/* Overview widget */}
+      {user && (
+        <div className="widget">
+          <div className="widget__title"><i className="bi bi-bar-chart-fill"></i> Tổng quan</div>
+          {overviewPlays ? (
+            <>
+              <div className="widget-overview__greeting">
+                <span>Hey <strong>{overviewPlays.fullName}</strong>, you have</span>
+                <strong className="widget-overview__plays">{overviewPlays.totalPlays} play{overviewPlays.totalPlays !== 1 ? 's' : ''}</strong>
+                <span>last 7 days</span>
+              </div>
+              <Link className="btn btn-outline" to="/overview" style={{ width: '100%', justifyContent: 'center', marginTop: '10px' }}>
+                <i className="bi bi-arrow-right"></i> Tổng quan
+              </Link>
+            </>
+          ) : (
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Chưa có dữ liệu.</p>
+          )}
+        </div>
+      )}
+
 }

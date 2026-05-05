@@ -96,9 +96,14 @@ export default function TrackCard({ track, trackList }) {
           {track.title}
         </Link>
 
-        <div className="track-card__artist">
-          {track.artist}
-        </div>
+        <Link
+          className="track-card__artist"
+          to={`/profile/${track.uploader?.email}`}
+          onClick={(e) => e.stopPropagation()}
+          title={`Xem profile: ${track.uploader?.fullName}`}
+        >
+          {track.artist || track.uploader?.fullName}
+        </Link>
 
         <div className="track-card__meta">
 

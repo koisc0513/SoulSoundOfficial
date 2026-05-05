@@ -21,17 +21,20 @@ public class UserService {
     private final LikeRepository       likeRepo;
     private final PasswordEncoder      passwordEncoder;
     private final FileStorageService   fileStorage;
+    private final NotificationService  notifService;  // ← NEW
 
     public UserService(UserRepository userRepo,
                        TrackRepository trackRepo,
                        LikeRepository likeRepo,
                        PasswordEncoder passwordEncoder,
-                       FileStorageService fileStorage) {
+                       FileStorageService fileStorage,
+                       NotificationService notifService) {  // ← NEW
         this.userRepo        = userRepo;
         this.trackRepo       = trackRepo;
         this.likeRepo        = likeRepo;
         this.passwordEncoder = passwordEncoder;
         this.fileStorage     = fileStorage;
+        this.notifService    = notifService;               // ← NEW
     }
 
     // ── Đăng ký ────────────────────────────────────────────────────
@@ -129,6 +132,8 @@ public class UserService {
         } else {
             follower.getFollowing().add(target);
             userRepo.save(follower);
+            // ── Thông báo follow mới ─────────────────────────────
+            notifService.notifyNewFollower(follower, target);
             return true;
         }
     }

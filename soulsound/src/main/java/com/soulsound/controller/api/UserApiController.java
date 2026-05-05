@@ -3,19 +3,23 @@ package com.soulsound.controller.api;
 import com.soulsound.dto.ProfileEditDto;
 import com.soulsound.entity.*;
 import java.util.Comparator;
+import com.soulsound.repository.CommentRepository;
 import com.soulsound.repository.LikeRepository;
+import com.soulsound.repository.ListeningHistoryRepository;
 import com.soulsound.repository.UserRepository;
 import com.soulsound.service.FileStorageService;
 import com.soulsound.service.PlaylistService;
 import com.soulsound.service.TrackService;
 import com.soulsound.service.UserService;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,18 +31,24 @@ public class UserApiController {
     private final TrackService       trackService;
     private final PlaylistService    playlistService;
     private final LikeRepository     likeRepo;
+    private final CommentRepository  commentRepo;
     private final UserRepository     userRepo;
-    private final FileStorageService fileStorage;
+    private final FileStorageService         fileStorage;
+    private final ListeningHistoryRepository historyRepo;
 
     public UserApiController(UserService userService, TrackService trackService,
                              PlaylistService playlistService, LikeRepository likeRepo,
-                             UserRepository userRepo, FileStorageService fileStorage) {
+                             CommentRepository commentRepo,
+                             UserRepository userRepo, FileStorageService fileStorage,
+                             ListeningHistoryRepository historyRepo) {
         this.userService     = userService;
         this.trackService    = trackService;
         this.playlistService = playlistService;
         this.likeRepo        = likeRepo;
+        this.commentRepo     = commentRepo;
         this.userRepo        = userRepo;
         this.fileStorage     = fileStorage;
+        this.historyRepo     = historyRepo;
     }
 
     // GET /api/users/profile/{email}
@@ -51,102 +61,63 @@ public class UserApiController {
             User profileUser = userService.findByEmail(email);
             boolean isOwner  = principal != null && principal.getUsername().equals(email);
 
-            // Tracks
             List<Track> tracks = trackService.getTracksByUser(profileUser.getId())
                     .stream()
-                    .filter(t -> isOwner || (t.getPrivacy() == TrackPrivacy.PUBLIC && !t.isHidden()))
-                    .collect(Collectors.toList());
-
-            // Liked
-            List<Track> likedTracks = likeRepo.findByUserIdOrderByLikedAtDesc(profileUser.getId())
-                    .stream().map(Like::getTrack)
-                    .filter(t -> t != null && !t.isHidden())
-                    .collect(Collectors.toList());
-
-            // Playlists
-            List<Playlist> playlists = playlistService.getByOwner(profileUser.getId());
-
-            // Received comments: gom tất cả comments trên track của profileUser,
-            // sort mới nhất trước, limit 20, kèm thông tin author + track
-            List<Map<String, Object>> receivedComments = tracks.stream()
-                    .flatMap(t -> t.getComments().stream())
-                    .filter(c -> c != null && c.getAuthor() != null && c.getTrack() != null)
-                    .sorted(Comparator.comparing(Comment::getCreatedAt).reversed())
-                    .limit(20)
-                    .map(c -> {
-                        Map<String, Object> cm = new LinkedHashMap<>();
-                        cm.put("id",        c.getId());
-                        cm.put("content",   c.getContent());
-                        cm.put("createdAt", c.getCreatedAt().toString());
-                        cm.put("author", Map.of(
-                                "id",        c.getAuthor().getId(),
-                                "fullName",  c.getAuthor().getFullName(),
-                                "email",     c.getAuthor().getEmail(),
-                                "avatarUrl", c.getAuthor().getAvatarUrl() != null
-                                             ? c.getAuthor().getAvatarUrl() : ""
-                        ));
-                        cm.put("track", Map.of(
-                                "id",    c.getTrack().getId(),
-                                "title", c.getTrack().getTitle()
-                        ));
-                        return cm;
-                    })
+                    .filter(t -> isOwner || (!t.isHidden() && t.getPrivacy() == TrackPrivacy.PUBLIC))
                     .collect(Collectors.toList());
 
             Map<String, Object> res = new LinkedHashMap<>();
-            res.put("user",             buildFullUserDto(profileUser));
-            res.put("tracks",           tracks.stream().map(t -> trackSummary(t)).collect(Collectors.toList()));
-            res.put("likedTracks",      likedTracks.stream().map(t -> trackSummary(t)).collect(Collectors.toList()));
-            res.put("playlists",        playlists.stream().map(p -> playlistSummary(p)).collect(Collectors.toList()));
-            res.put("receivedComments", receivedComments);
-            res.put("isOwner",          isOwner);
+            res.put("user", buildFullUserDto(profileUser));
+            res.put("tracks", tracks.stream().map(this::trackSummary).collect(Collectors.toList()));
+            res.put("isOwner", isOwner);
 
-            if (principal != null && !isOwner) {
+            if (principal != null) {
                 User current = userService.findByEmail(principal.getUsername());
                 res.put("isFollowing", userService.isFollowing(current.getId(), profileUser.getId()));
-                res.put("likedTrackIds", userService.getLikedTrackIds(current.getId()));
+            } else {
+                res.put("isFollowing", false);
             }
 
             return ResponseEntity.ok(res);
-        } catch (NoSuchElementException e) {
+        } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    // PUT /api/users/profile  — edit profile
+    // PUT /api/users/profile
     @PutMapping("/profile")
-    public ResponseEntity<?> editProfile(
-            ProfileEditDto dto,
+    public ResponseEntity<?> updateProfile(
+            @ModelAttribute ProfileEditDto dto,
             @AuthenticationPrincipal UserDetails principal) {
 
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Chua dang nhap."));
+
         try {
-            User user = userService.findByEmail(principal.getUsername());
-            User updated = userService.updateProfile(user.getId(), dto);
+            User current = userService.findByEmail(principal.getUsername());
+            User updated = userService.updateProfile(current.getId(), dto);
             return ResponseEntity.ok(buildFullUserDto(updated));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    // PATCH /api/users/banner — cập nhật ảnh banner
+    // POST /api/users/banner
     @PostMapping("/banner")
     public ResponseEntity<?> updateBanner(
             @RequestParam("bannerFile") MultipartFile bannerFile,
             @AuthenticationPrincipal UserDetails principal) {
 
         if (principal == null)
-            return ResponseEntity.status(401).body(Map.of("error", "Chưa đăng nhập."));
+            return ResponseEntity.status(401).body(Map.of("error", "Chua dang nhap."));
 
         try {
-            User user = userService.findByEmail(principal.getUsername());
-            // Xóa banner cũ nếu có
-            if (user.getBannerUrl() != null && !user.getBannerUrl().isBlank()) {
-                fileStorage.deleteFile(user.getBannerUrl());
-            }
-            String newUrl = fileStorage.saveBanner(bannerFile);
-            user.setBannerUrl(newUrl);
-            userRepo.save(user);
-            return ResponseEntity.ok(Map.of("bannerUrl", newUrl));
+            User current = userService.findByEmail(principal.getUsername());
+            if (current.getBannerUrl() != null) fileStorage.deleteFile(current.getBannerUrl());
+            String url = fileStorage.saveBanner(bannerFile);
+            current.setBannerUrl(url);
+            userRepo.save(current);
+            return ResponseEntity.ok(Map.of("bannerUrl", url));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -159,7 +130,7 @@ public class UserApiController {
             @AuthenticationPrincipal UserDetails principal) {
 
         if (principal == null)
-            return ResponseEntity.status(401).body(Map.of("error", "Chưa đăng nhập."));
+            return ResponseEntity.status(401).body(Map.of("error", "Chua dang nhap."));
 
         User current    = userService.findByEmail(principal.getUsername());
         boolean following = userService.toggleFollow(current.getId(), id);
@@ -189,6 +160,7 @@ public class UserApiController {
         try {
             User user = userRepo.findByIdWithFollowing(id).orElseThrow();
             return ResponseEntity.ok(user.getFollowing().stream()
+                    .sorted(Comparator.comparing(User::getFullName))
                     .map(this::userSummary).collect(Collectors.toList()));
         } catch (Exception e) {
             return ResponseEntity.ok(List.of());
@@ -198,30 +170,41 @@ public class UserApiController {
     // GET /api/users/liked
     @GetMapping("/liked")
     public ResponseEntity<?> getLiked(@AuthenticationPrincipal UserDetails principal) {
-        User user = userService.findByEmail(principal.getUsername());
-        List<Track> tracks = likeRepo.findByUserIdOrderByLikedAtDesc(user.getId())
-                .stream().map(Like::getTrack)
-                .filter(t -> t != null && !t.isHidden())
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Chua dang nhap."));
+
+        User current = userService.findByEmail(principal.getUsername());
+        List<Map<String, Object>> liked = likeRepo.findByUserIdOrderByLikedAtDesc(current.getId())
+                .stream()
+                .map(l -> trackSummary(l.getTrack()))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(tracks.stream().map(this::trackSummary).collect(Collectors.toList()));
+        return ResponseEntity.ok(liked);
     }
 
-    // GET /api/users/history?page=0
+    // GET /api/users/history
     @GetMapping("/history")
     public ResponseEntity<?> getHistory(
             @RequestParam(defaultValue = "0") int page,
             @AuthenticationPrincipal UserDetails principal) {
 
-        User user = userService.findByEmail(principal.getUsername());
-        var histPage = trackService.getHistory(user.getId(), page);
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Chua dang nhap."));
+
+        User current = userService.findByEmail(principal.getUsername());
+        Page<?> histPage = trackService.getHistory(current.getId(), page);
+
+        List<Map<String, Object>> histories = histPage.getContent().stream()
+                .map(obj -> {
+                    ListeningHistory h = (ListeningHistory) obj;
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("track",      trackSummary(h.getTrack()));
+                    m.put("listenedAt", h.getListenedAt() != null ? h.getListenedAt().toString() : "");
+                    return m;
+                })
+                .collect(Collectors.toList());
+
         return ResponseEntity.ok(Map.of(
-                "histories",   histPage.getContent().stream()
-                        .filter(h -> h.getTrack() != null)
-                        .map(h -> Map.of(
-                                "id",          h.getId(),
-                                "listenedAt",  h.getListenedAt().toString(),
-                                "track",       trackSummary(h.getTrack())
-                        )).collect(Collectors.toList()),
+                "histories",   histories,
                 "totalPages",  histPage.getTotalPages(),
                 "currentPage", page
         ));
@@ -230,11 +213,130 @@ public class UserApiController {
     // GET /api/users/suggested
     @GetMapping("/suggested")
     public ResponseEntity<?> getSuggested(@AuthenticationPrincipal UserDetails principal) {
-        if (principal == null) return ResponseEntity.ok(List.of());
-        User user = userService.findByEmail(principal.getUsername());
-        List<User> suggested = userRepo.findSuggestedUsers(user.getId(),
-                org.springframework.data.domain.PageRequest.of(0, 5));
-        return ResponseEntity.ok(suggested.stream().map(this::userSummary).collect(Collectors.toList()));
+        try {
+            if (principal == null) return ResponseEntity.ok(List.of());
+
+            User user = userService.findByEmail(principal.getUsername());
+
+            List<User> suggested = userRepo.findSuggestedUsers(
+                    user.getId(),
+                    PageRequest.of(0, 5)
+            );
+
+            final User currentUser = user;
+            return ResponseEntity.ok(
+                    suggested.stream()
+                            .map(u -> userSummaryWithFollowing(u, currentUser))
+                            .collect(Collectors.toList())
+            );
+
+        } catch (Exception e) {
+            return ResponseEntity.ok(List.of());
+        }
+    }
+
+    // ── GET /api/users/overview  (7-day widget + full overview page) ──
+    @GetMapping("/overview")
+    public ResponseEntity<?> getOverview(
+            @RequestParam(defaultValue = "7") int days,
+            @AuthenticationPrincipal UserDetails principal) {
+
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Chua dang nhap."));
+
+        try {
+            User user = userService.findByEmail(principal.getUsername());
+            Long uid  = user.getId();
+
+            // Tong luot nghe tat ca track
+            long totalPlays    = trackService.sumPlayCountByUser(uid);
+            long totalLikes    = likeRepo.countLikesByUploaderId(uid);
+            long totalComments = commentRepo.countCommentsByUploaderId(uid);
+
+            // Top 5 tracks (30 ngay)
+            List<Track> topTracks = trackService.getTopTracksByUser(uid, 5);
+            List<Map<String, Object>> topTracksDto = topTracks.stream()
+                    .map(t -> {
+                        Map<String, Object> m = new LinkedHashMap<>();
+                        m.put("id",           t.getId());
+                        m.put("title",        t.getTitle());
+                        m.put("artist",       t.getArtist() != null ? t.getArtist() : "");
+                        m.put("thumbnailUrl", t.getThumbnailUrl() != null ? t.getThumbnailUrl() : "");
+                        m.put("playCount",    t.getPlayCount());
+                        m.put("likeCount",    t.getLikeCount());
+                        m.put("genre",        t.getGenre() != null ? t.getGenre() : "");
+                        return m;
+                    })
+                    .collect(Collectors.toList());
+
+            // Top 5 listeners (30 ngay)
+            LocalDateTime since30 = LocalDateTime.now().minusDays(30);
+            List<Object[]> topListenersRaw = likeRepo.findTopListenersByUploaderId(
+                    uid, since30, PageRequest.of(0, 5));
+            List<Map<String, Object>> topListenersDto = topListenersRaw.stream()
+                    .map(row -> {
+                        User u = (User) row[0];
+                        Long cnt = (Long) row[1];
+                        Map<String, Object> m = new LinkedHashMap<>();
+                        m.put("id",           u.getId());
+                        m.put("fullName",     u.getFullName());
+                        m.put("email",        u.getEmail());
+                        m.put("avatarUrl",    u.getAvatarUrl() != null ? u.getAvatarUrl() : "");
+                        m.put("likeCount",    cnt);
+                        return m;
+                    })
+                    .collect(Collectors.toList());
+
+            // Thong ke theo ngay (chart data): play theo ngay dua tren createdAt track (approximation)
+            List<Track> allTracks = trackService.getTracksByUser(uid);
+
+            // Daily chart series
+            LocalDateTime since = LocalDateTime.now().minusDays(days);
+            List<Object[]> dailyPlaysRaw    = historyRepo.countDailyPlaysByUploaderId(uid, since);
+            List<Object[]> dailyLikesRaw    = likeRepo.countDailyLikesByUploaderId(uid, since);
+            List<Object[]> dailyCommentsRaw = commentRepo.countDailyCommentsByUploaderId(uid, since);
+
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("fullName",      user.getFullName());
+            result.put("totalPlays",    totalPlays);
+            result.put("totalLikes",    totalLikes);
+            result.put("totalComments", totalComments);
+            result.put("totalTracks",   allTracks.size());
+            result.put("topTracks",     topTracksDto);
+            result.put("topListeners",  topListenersDto);
+            result.put("dailyPlays",    buildDailySeries(dailyPlaysRaw, days));
+            result.put("dailyLikes",    buildDailySeries(dailyLikesRaw, days));
+            result.put("dailyComments", buildDailySeries(dailyCommentsRaw, days));
+            result.put("days",          days);
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
+    // ── Build daily time series (fills missing days with 0) ──────────
+    private List<Map<String, Object>> buildDailySeries(List<Object[]> raw, int days) {
+        Map<String, Long> lookup = new LinkedHashMap<>();
+        for (Object[] row : raw) {
+            // row[0] is LocalDateTime — truncate to date string
+            String dateStr = row[0].toString().substring(0, 10);
+            Long count = row[1] instanceof Long ? (Long) row[1] : ((Number) row[1]).longValue();
+            lookup.merge(dateStr, count, Long::sum);
+        }
+        List<Map<String, Object>> series = new ArrayList<>();
+        java.time.LocalDate today = java.time.LocalDate.now();
+        for (int i = days - 1; i >= 0; i--) {
+            java.time.LocalDate d = today.minusDays(i);
+            String key = d.toString();
+            Map<String, Object> pt = new LinkedHashMap<>();
+            pt.put("date",  key);
+            pt.put("label", d.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd")));
+            pt.put("count", lookup.getOrDefault(key, 0L));
+            series.add(pt);
+        }
+        return series;
     }
 
     // ── DTO helpers ──────────────────────────────────────────────────
@@ -244,10 +346,10 @@ public class UserApiController {
         m.put("id",            u.getId());
         m.put("fullName",      u.getFullName());
         m.put("email",         u.getEmail());
-        m.put("avatarUrl",     u.getAvatarUrl()  != null ? u.getAvatarUrl()  : "");
-        m.put("bannerUrl",     u.getBannerUrl()  != null ? u.getBannerUrl()  : "");
-        m.put("bio",           u.getBio()        != null ? u.getBio()        : "");
-        m.put("address",       u.getAddress()    != null ? u.getAddress()    : "");
+        m.put("avatarUrl",     u.getAvatarUrl()   != null ? u.getAvatarUrl()   : "");
+        m.put("bannerUrl",     u.getBannerUrl()   != null ? u.getBannerUrl()   : "");
+        m.put("bio",           u.getBio()         != null ? u.getBio()         : "");
+        m.put("address",       u.getAddress()     != null ? u.getAddress()     : "");
         m.put("birthYear",     u.getBirthYear());
         m.put("phoneNumber",   u.getPhoneNumber() != null ? u.getPhoneNumber() : "");
         m.put("role",          u.getRole().name());
@@ -264,6 +366,18 @@ public class UserApiController {
                 "avatarUrl",     u.getAvatarUrl() != null ? u.getAvatarUrl() : "",
                 "followerCount", u.getFollowerCount()
         );
+    }
+
+    private Map<String, Object> userSummaryWithFollowing(User u, User currentUser) {
+        boolean isFollowing = userService.isFollowing(currentUser.getId(), u.getId());
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id",            u.getId());
+        m.put("fullName",      u.getFullName());
+        m.put("email",         u.getEmail());
+        m.put("avatarUrl",     u.getAvatarUrl() != null ? u.getAvatarUrl() : "");
+        m.put("followerCount", u.getFollowerCount());
+        m.put("following",     isFollowing);
+        return m;
     }
 
     private Map<String, Object> trackSummary(Track t) {

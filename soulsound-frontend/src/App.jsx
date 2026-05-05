@@ -20,6 +20,7 @@ import PlaylistDetail from './pages/PlaylistDetail'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminUsers   from './pages/admin/Users'
 import AdminTracks  from './pages/admin/Tracks'
+ import Overview      from './pages/Overview'
 
 // Guard: chỉ cho phép authenticated
 function PrivateRoute({ children }) {
@@ -71,6 +72,9 @@ export default function App() {
             }/>
             <Route path="/playlists" element={
               <PrivateRoute><Playlists /></PrivateRoute>
+            }/>
+            <Route path="/overview" element={
+              <PrivateRoute><Overview /></PrivateRoute>
             }/>
             <Route path="/playlists/:id" element={
               <PrivateRoute><PlaylistDetail /></PrivateRoute>

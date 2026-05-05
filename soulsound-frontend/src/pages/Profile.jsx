@@ -167,9 +167,14 @@ export default function Profile() {
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px',
                       alignItems: 'flex-end', paddingBottom: '4px' }}>
           {isOwner ? (
+            <>
             <Link className="btn btn-outline" to="/profile/edit">
               <i className="bi bi-pencil"></i> Chỉnh sửa hồ sơ
             </Link>
+            <Link className="btn btn-outline" to="/overview">
+              <i className="bi bi-bar-chart-line"></i> Tổng quan
+            </Link>
+            </>
           ) : (
             user && (
               <button
@@ -188,7 +193,7 @@ export default function Profile() {
 
         {/* Stats: label trên, số dưới, căn trái */}
         <div className="profile-stats" style={{ gap: '32px', border: 'none', marginBottom: '16px', alignItems: 'flex-end' }}>
-        <button className="stat" style={{ minWidth: '60px', background: 'none', border: 'none', cursor: 'default', fontFamily: 'var(--font-body)', textAlign: 'left', padding: 0 }}>
+        <button className="stat" style={{ minWidth: '53px', background: 'none', border: 'none', cursor: 'default', fontFamily: 'var(--font-body)', textAlign: 'left', padding: 0 }}>
           <div className="stat__label">Tracks</div>
           <div className="stat__number">{tracks.length}</div>
         </button>
