@@ -223,10 +223,10 @@ public class UserApiController {
                     PageRequest.of(0, 5)
             );
 
-            final User currentUser = user;
+            Set<Long> followingIds = new HashSet<>(userRepo.findFollowingIds(user.getId()));
             return ResponseEntity.ok(
                     suggested.stream()
-                            .map(u -> userSummaryWithFollowing(u, currentUser))
+                            .map(u -> userSummaryWithFollowingIds(u, followingIds))
                             .collect(Collectors.toList())
             );
 
@@ -366,6 +366,18 @@ public class UserApiController {
                 "avatarUrl",     u.getAvatarUrl() != null ? u.getAvatarUrl() : "",
                 "followerCount", u.getFollowerCount()
         );
+    }
+
+
+    private Map<String, Object> userSummaryWithFollowingIds(User u, Set<Long> followingIds) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id",            u.getId());
+        m.put("fullName",      u.getFullName());
+        m.put("email",         u.getEmail());
+        m.put("avatarUrl",     u.getAvatarUrl() != null ? u.getAvatarUrl() : "");
+        m.put("followerCount", u.getFollowerCount());
+        m.put("following",     followingIds.contains(u.getId()));
+        return m;
     }
 
     private Map<String, Object> userSummaryWithFollowing(User u, User currentUser) {

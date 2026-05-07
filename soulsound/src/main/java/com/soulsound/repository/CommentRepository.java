@@ -12,6 +12,9 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByTrackIdOrderByCreatedAtDesc(Long trackId);
     List<Comment> findByAuthorIdOrderByCreatedAtDesc(Long authorId);
 
+    /** Chỉ lấy bình luận gốc (không phải reply) theo thứ tự cũ → mới */
+    List<Comment> findByTrackIdAndParentIsNullOrderByCreatedAtAsc(Long trackId);
+
     @Query("SELECT COALESCE(COUNT(c),0) FROM Comment c WHERE c.track.uploader.id = :uid")
     Long countCommentsByUploaderId(@Param("uid") Long uid);
 

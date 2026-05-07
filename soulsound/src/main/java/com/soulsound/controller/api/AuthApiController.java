@@ -89,15 +89,18 @@ public class AuthApiController {
     }
 
     private Map<String, Object> buildUserDto(User u) {
-        return Map.of(
-                "id",            u.getId(),
-                "fullName",      u.getFullName(),
-                "email",         u.getEmail(),
-                "avatarUrl",     u.getAvatarUrl() != null ? u.getAvatarUrl() : "",
-                "bio",           u.getBio() != null ? u.getBio() : "",
-                "role",          u.getRole().name(),
-                "followerCount", u.getFollowerCount(),
-                "followingCount",u.getFollowingCount()
-        );
+        Map<String, Object> m = new java.util.HashMap<>();
+        m.put("id",             u.getId());
+        m.put("fullName",       u.getFullName());
+        m.put("email",          u.getEmail());
+        m.put("avatarUrl",      u.getAvatarUrl()   != null ? u.getAvatarUrl()   : "");
+        m.put("bio",            u.getBio()          != null ? u.getBio()         : "");
+        m.put("role",           u.getRole().name());
+        m.put("followerCount",  u.getFollowerCount());
+        m.put("followingCount", u.getFollowingCount());
+        m.put("birthYear",      u.getBirthYear());
+        m.put("phoneNumber",    u.getPhoneNumber()  != null ? u.getPhoneNumber() : "");
+        m.put("address",        u.getAddress()      != null ? u.getAddress()     : "");
+        return m;
     }
 }

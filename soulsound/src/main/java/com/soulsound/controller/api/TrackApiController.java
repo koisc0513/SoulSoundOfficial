@@ -3,6 +3,7 @@ package com.soulsound.controller.api;
 import com.soulsound.dto.TrackEditDto;
 import com.soulsound.dto.TrackUploadDto;
 import com.soulsound.entity.*;
+import com.soulsound.repository.CommentRepository;
 import com.soulsound.service.TrackService;
 import com.soulsound.service.UserService;
 import org.springframework.data.domain.Page;
@@ -19,12 +20,14 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/tracks")
 public class TrackApiController {
 
-    private final TrackService trackService;
-    private final UserService  userService;
+    private final TrackService      trackService;
+    private final UserService       userService;
+    private final CommentRepository commentRepo;
 
-    public TrackApiController(TrackService trackService, UserService userService) {
+    public TrackApiController(TrackService trackService, UserService userService, CommentRepository commentRepo) {
         this.trackService = trackService;
         this.userService  = userService;
+        this.commentRepo  = commentRepo;
     }
 
     // GET /api/tracks?page=0
@@ -158,6 +161,25 @@ public class TrackApiController {
         }
     }
 
+    // POST /api/tracks/{id}/comments/{commentId}/reply  — chỉ uploader
+    @PostMapping("/{id}/comments/{commentId}/reply")
+    public ResponseEntity<?> replyComment(
+            @PathVariable Long id,
+            @PathVariable Long commentId,
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserDetails principal) {
+
+        try {
+            User user  = userService.findByEmail(principal.getUsername());
+            Comment c  = trackService.replyComment(id, commentId, user.getId(), body.get("content"));
+            return ResponseEntity.ok(commentDto(c));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     // DELETE /api/tracks/comments/{commentId}
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<?> deleteComment(
@@ -201,25 +223,41 @@ public class TrackApiController {
 
     private Map<String, Object> trackDetailDto(Track t) {
         Map<String, Object> m = new LinkedHashMap<>(trackDto(t));
-        // Include comments
-        m.put("comments", t.getComments().stream()
-                .sorted(Comparator.comparing(Comment::getCreatedAt))
+        // Chỉ lấy bình luận gốc (parent == null), replies được nhúng bên trong mỗi comment
+        m.put("comments", commentRepo.findByTrackIdAndParentIsNullOrderByCreatedAtAsc(t.getId())
+                .stream()
                 .map(this::commentDto)
                 .collect(Collectors.toList()));
         return m;
     }
 
     private Map<String, Object> commentDto(Comment c) {
-        return Map.of(
-                "id",        c.getId(),
-                "content",   c.getContent(),
-                "createdAt", c.getCreatedAt().toString(),
-                "author", Map.of(
-                        "id",        c.getAuthor().getId(),
-                        "fullName",  c.getAuthor().getFullName(),
-                        "email",     c.getAuthor().getEmail(),
-                        "avatarUrl", c.getAuthor().getAvatarUrl() != null ? c.getAuthor().getAvatarUrl() : ""
-                )
-        );
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id",        c.getId());
+        m.put("content",   c.getContent());
+        m.put("createdAt", c.getCreatedAt().toString());
+        m.put("author", Map.of(
+                "id",        c.getAuthor().getId(),
+                "fullName",  c.getAuthor().getFullName(),
+                "email",     c.getAuthor().getEmail(),
+                "avatarUrl", c.getAuthor().getAvatarUrl() != null ? c.getAuthor().getAvatarUrl() : ""
+        ));
+        // Nhúng replies (chỉ 1 cấp — không đệ quy)
+        m.put("replies", c.getReplies().stream()
+                .map(r -> {
+                    Map<String, Object> rm = new LinkedHashMap<>();
+                    rm.put("id",        r.getId());
+                    rm.put("content",   r.getContent());
+                    rm.put("createdAt", r.getCreatedAt().toString());
+                    rm.put("author", Map.of(
+                            "id",        r.getAuthor().getId(),
+                            "fullName",  r.getAuthor().getFullName(),
+                            "email",     r.getAuthor().getEmail(),
+                            "avatarUrl", r.getAuthor().getAvatarUrl() != null ? r.getAuthor().getAvatarUrl() : ""
+                    ));
+                    return rm;
+                })
+                .collect(Collectors.toList()));
+        return m;
     }
 }

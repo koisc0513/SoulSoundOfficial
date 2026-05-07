@@ -50,8 +50,9 @@ export const tracksApi = {
   delete:     (id)                => api.delete(`/tracks/${id}`),
   play:       (id)                => api.post(`/tracks/${id}/play`),
   like:       (id)                => api.post(`/tracks/${id}/like`),
-  addComment: (id, content)       => api.post(`/tracks/${id}/comments`, { content }),
-  deleteComment: (commentId)      => api.delete(`/tracks/comments/${commentId}`),
+  addComment:    (id, content)            => api.post(`/tracks/${id}/comments`, { content }),
+  replyComment:  (id, commentId, content) => api.post(`/tracks/${id}/comments/${commentId}/reply`, { content }),
+  deleteComment: (commentId)              => api.delete(`/tracks/comments/${commentId}`),
 }
 
 

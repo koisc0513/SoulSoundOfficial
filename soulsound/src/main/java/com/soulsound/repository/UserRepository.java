@@ -56,4 +56,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("userId") Long userId,
             Pageable pageable
     );
+
+    // Lấy tất cả ID mà user đang follow (1 query duy nhất, tránh N+1)
+    @Query("SELECT u.id FROM User follower JOIN follower.following u WHERE follower.id = :userId")
+    List<Long> findFollowingIds(@Param("userId") Long userId);
+
 }

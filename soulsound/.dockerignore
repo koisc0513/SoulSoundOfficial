@@ -1,0 +1,10 @@
+target/
+uploads/
+.idea/
+.git/
+.gitignore
+.gitattributes
+src/test/
+HELP.md
+*.md
+mvnw.cmd

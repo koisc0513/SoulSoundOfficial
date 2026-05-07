@@ -21,7 +21,8 @@ export function PlayerProvider({ children }) {
   const [shuffle, setShuffle] = useState(false)
   const [repeat,  setRepeat]  = useState(false)
 
-  const [likedTracks, setLikedTracks] = useState([])
+  const [likedTracks,     setLikedTracks]     = useState([])
+  const [trackLikeCounts, setTrackLikeCounts] = useState({})
 
   // Refs: avoid stale closures in audio event handlers
   const playlistRef     = useRef([])
@@ -248,6 +249,10 @@ export function PlayerProvider({ children }) {
       setLikedTracks(prev =>
         liked ? [...new Set([...prev, target.id])] : prev.filter(id => id !== target.id)
       )
+      setTrackLikeCounts(prev => ({
+        ...prev,
+        [target.id]: (prev[target.id] ?? target.likeCount ?? 0) + (liked ? 1 : -1)
+      }))
       setCurrentTrack(prev =>
         prev?.id === target.id
           ? { ...prev, likeCount: (prev.likeCount || 0) + (liked ? 1 : -1) }
@@ -293,7 +298,7 @@ export function PlayerProvider({ children }) {
         shuffle, repeat,
         playTrack, nextTrack, prevTrack, playAtIndex, setQueue,
         togglePlay, toggleShuffle, toggleRepeat,
-        toggleLike, likedTracks, isLiked,
+        toggleLike, likedTracks, isLiked, trackLikeCounts,
         seek, changeVolume,
         nextUp, fmt,
       }}

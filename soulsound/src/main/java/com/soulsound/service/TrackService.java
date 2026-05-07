@@ -6,6 +6,7 @@ import com.soulsound.entity.*;
 import com.soulsound.repository.*;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
@@ -172,6 +173,7 @@ public class TrackService {
     /**
      * @return Map với keys: liked (boolean), likeCount (long)
      */
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public Map<String, Object> toggleLike(Long trackId, Long userId) {
         Track track = findById(trackId);
         User  user  = userRepo.findById(userId)
@@ -215,6 +217,33 @@ public class TrackService {
         notifService.notifyNewComment(user, track, content.trim());
 
         return saved;
+    }
+
+    /** Uploader trả lời một bình luận gốc. */
+    public Comment replyComment(Long trackId, Long parentCommentId, Long userId, String content) {
+        if (content == null || content.isBlank()) {
+            throw new IllegalArgumentException("Nội dung không được để trống.");
+        }
+        Track track = findById(trackId);
+        User  user  = userRepo.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("User không tồn tại."));
+
+        // Chỉ uploader mới được reply
+        if (!track.getUploader().getId().equals(userId)) {
+            throw new SecurityException("Chỉ uploader mới có thể trả lời bình luận.");
+        }
+
+        Comment parent = commentRepo.findById(parentCommentId)
+                .orElseThrow(() -> new NoSuchElementException("Bình luận không tồn tại."));
+
+        // Không cho reply của reply (chỉ 1 cấp)
+        if (parent.getParent() != null) {
+            throw new IllegalArgumentException("Không thể trả lời một reply.");
+        }
+
+        Comment reply = new Comment(content.trim(), user, track);
+        reply.setParent(parent);
+        return commentRepo.save(reply);
     }
 
     public void deleteComment(Long commentId, Long requesterId) {

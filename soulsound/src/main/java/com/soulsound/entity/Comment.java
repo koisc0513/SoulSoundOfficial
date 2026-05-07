@@ -34,6 +34,15 @@ public class Comment {
     @JoinColumn(name = "track_id", nullable = false)
     private Track track;
 
+    /** Null = bình luận gốc. Non-null = trả lời của uploader. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Comment parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @org.hibernate.annotations.OrderBy(clause = "created_at ASC")
+    private java.util.List<Comment> replies = new java.util.ArrayList<>();
+
     // ── Constructors ───────────────────────────────────────
     public Comment() {}
 
@@ -57,4 +66,9 @@ public class Comment {
 
     public Track getTrack() { return track; }
     public void setTrack(Track track) { this.track = track; }
+
+    public Comment getParent() { return parent; }
+    public void setParent(Comment parent) { this.parent = parent; }
+
+    public java.util.List<Comment> getReplies() { return replies; }
 }

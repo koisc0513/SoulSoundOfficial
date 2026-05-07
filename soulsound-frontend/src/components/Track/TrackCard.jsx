@@ -14,7 +14,8 @@ export default function TrackCard({ track, trackList }) {
     currentTrack,
     isPlaying,
     likedTracks,
-    toggleLike
+    toggleLike,
+    trackLikeCounts,
   } = usePlayer()
 
   const { user } = useAuth()
@@ -24,6 +25,9 @@ export default function TrackCard({ track, trackList }) {
 
   const liked =
     likedTracks.includes(track.id)
+
+  const likeCount =
+    trackLikeCounts[track.id] ?? track.likeCount ?? 0
 
   const isActive =
     currentTrack?.id === track.id
@@ -36,17 +40,11 @@ export default function TrackCard({ track, trackList }) {
 
 
   const handleLike = async (e) => {
-
     e.stopPropagation()
-
     if (!user) return
-
     setLoading(true)
-
     await toggleLike(track)
-
     setLoading(false)
-
   }
 
 
@@ -114,7 +112,7 @@ export default function TrackCard({ track, trackList }) {
 
           <span>
             <i className="bi bi-heart"></i>
-            {track.likeCount ?? 0}
+            {likeCount}
           </span>
 
         </div>

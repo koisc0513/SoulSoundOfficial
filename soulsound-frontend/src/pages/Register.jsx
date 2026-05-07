@@ -6,9 +6,11 @@ import api from '../api/index.js'
 export default function Register() {
   const { login } = useAuth()
   const navigate  = useNavigate()
-  const [form, setForm]     = useState({ fullName:'', email:'', birthYear:'', phoneNumber:'', password:'', confirmPassword:'' })
+  const [form, setForm]     = useState({ fullName:'', email:'', birthYear:'', phoneNumber:'', address:'', password:'', confirmPassword:'' })
   const [error, setError]   = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPw,  setShowPw]  = useState(false)
+  const [showCpw, setShowCpw] = useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -24,6 +26,12 @@ export default function Register() {
     } catch (err) {
       setError(err.response?.data?.error || 'Đăng ký thất bại.')
     } finally { setLoading(false) }
+  }
+
+  const pwToggleStyle = {
+    position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+    background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
+    padding: '4px', display: 'flex', alignItems: 'center'
   }
 
   return (
@@ -47,33 +55,63 @@ export default function Register() {
             <input className="form-control" type="email" value={form.email} onChange={e=>set('email',e.target.value)} required />
           </div>
 
-          <div className="form-group" style={{ marginBottom: '14px' }}>
-            <label className="form-label">Năm sinh</label>
-            <input
-              className="form-control"
-              type="number"
-              value={form.birthYear}
-              onChange={e=>set('birthYear',e.target.value)}
-              placeholder="VD: 2000"
-              min="1900"
-              max="2015"
-              required
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+            <div className="form-group">
+              <label className="form-label">Năm sinh</label>
+              <input
+                className="form-control"
+                type="number"
+                value={form.birthYear}
+                onChange={e=>set('birthYear',e.target.value)}
+                placeholder="VD: 2000"
+                min="1900"
+                max="2015"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Số điện thoại</label>
+              <input className="form-control" type="tel" value={form.phoneNumber} onChange={e=>set('phoneNumber',e.target.value)} />
+            </div>
           </div>
 
           <div className="form-group" style={{ marginBottom: '14px' }}>
-            <label className="form-label">Số điện thoại (tuỳ chọn)</label>
-            <input className="form-control" type="tel" value={form.phoneNumber} onChange={e=>set('phoneNumber',e.target.value)} />
+            <label className="form-label">Địa chỉ (tuỳ chọn)</label>
+            <input className="form-control" type="text" value={form.address} onChange={e=>set('address',e.target.value)} placeholder="VD: Hà Nội, Việt Nam" />
           </div>
 
           <div className="form-group" style={{ marginBottom: '14px' }}>
             <label className="form-label">Mật khẩu</label>
-            <input className="form-control" type="password" value={form.password} onChange={e=>set('password',e.target.value)} required />
+            <div style={{ position: 'relative' }}>
+              <input
+                className="form-control"
+                type={showPw ? 'text' : 'password'}
+                value={form.password}
+                onChange={e=>set('password',e.target.value)}
+                style={{ paddingRight: '38px' }}
+                required
+              />
+              <button type="button" style={pwToggleStyle} onClick={() => setShowPw(p => !p)} tabIndex={-1}>
+                <i className={`bi ${showPw ? 'bi-eye-slash' : 'bi-eye'}`} />
+              </button>
+            </div>
           </div>
 
           <div className="form-group" style={{ marginBottom: '14px' }}>
             <label className="form-label">Xác nhận mật khẩu</label>
-            <input className="form-control" type="password" value={form.confirmPassword} onChange={e=>set('confirmPassword',e.target.value)} required />
+            <div style={{ position: 'relative' }}>
+              <input
+                className="form-control"
+                type={showCpw ? 'text' : 'password'}
+                value={form.confirmPassword}
+                onChange={e=>set('confirmPassword',e.target.value)}
+                style={{ paddingRight: '38px' }}
+                required
+              />
+              <button type="button" style={pwToggleStyle} onClick={() => setShowCpw(p => !p)} tabIndex={-1}>
+                <i className={`bi ${showCpw ? 'bi-eye-slash' : 'bi-eye'}`} />
+              </button>
+            </div>
           </div>
 
           <button className="btn btn-primary" type="submit" disabled={loading}

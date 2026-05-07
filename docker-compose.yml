@@ -1,0 +1,51 @@
+services:
+
+  mysql:
+    image: mysql:8
+    container_name: soulsound-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: soulsound
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build: ./soulsound
+    container_name: soulsound-backend
+    restart: on-failure
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/soulsound?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      APP_UPLOAD_DIR: /app/uploads
+      JWT_SECRET: soulsound-super-secret-key-at-least-256-bits-long-for-hs256
+      APP_CORS_ORIGINS: http://localhost:3000
+    volumes:
+      - uploads_data:/app/uploads
+
+  frontend:
+    build: ./soulsound-frontend
+    container_name: soulsound-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  uploads_data:
