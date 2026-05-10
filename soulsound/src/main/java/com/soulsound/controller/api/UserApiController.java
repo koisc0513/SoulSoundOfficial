@@ -71,6 +71,46 @@ public class UserApiController {
             res.put("tracks", tracks.stream().map(this::trackSummary).collect(Collectors.toList()));
             res.put("isOwner", isOwner);
 
+            // ── Liked tracks ──────────────────────────────────────────
+            List<Map<String, Object>> likedTracks = likeRepo
+                    .findByUserIdOrderByLikedAtDesc(profileUser.getId())
+                    .stream()
+                    .map(l -> trackSummary(l.getTrack()))
+                    .collect(Collectors.toList());
+            res.put("likedTracks", likedTracks);
+
+            // ── Playlists ─────────────────────────────────────────────
+            List<Map<String, Object>> playlists = playlistService
+                    .getByOwner(profileUser.getId())
+                    .stream()
+                    .map(this::playlistSummary)
+                    .collect(Collectors.toList());
+            res.put("playlists", playlists);
+
+            // ── Received comments ─────────────────────────────────────
+            List<Map<String, Object>> receivedComments = commentRepo
+                    .findReceivedCommentsByUploaderId(profileUser.getId())
+                    .stream()
+                    .map(c -> {
+                        Map<String, Object> cm = new LinkedHashMap<>();
+                        cm.put("id",        c.getId());
+                        cm.put("content",   c.getContent());
+                        cm.put("createdAt", c.getCreatedAt().toString());
+                        cm.put("author", Map.of(
+                                "id",        c.getAuthor().getId(),
+                                "fullName",  c.getAuthor().getFullName(),
+                                "email",     c.getAuthor().getEmail(),
+                                "avatarUrl", c.getAuthor().getAvatarUrl() != null ? c.getAuthor().getAvatarUrl() : ""
+                        ));
+                        cm.put("track", Map.of(
+                                "id",    c.getTrack().getId(),
+                                "title", c.getTrack().getTitle()
+                        ));
+                        return cm;
+                    })
+                    .collect(Collectors.toList());
+            res.put("receivedComments", receivedComments);
+
             if (principal != null) {
                 User current = userService.findByEmail(principal.getUsername());
                 res.put("isFollowing", userService.isFollowing(current.getId(), profileUser.getId()));

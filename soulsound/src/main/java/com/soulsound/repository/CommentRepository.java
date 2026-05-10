@@ -15,6 +15,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     /** Chỉ lấy bình luận gốc (không phải reply) theo thứ tự cũ → mới */
     List<Comment> findByTrackIdAndParentIsNullOrderByCreatedAtAsc(Long trackId);
 
+    /** Bình luận nhận được: comment trên track của uploader, mới nhất trước */
+    @Query("SELECT c FROM Comment c WHERE c.track.uploader.id = :uid AND c.parent IS NULL ORDER BY c.createdAt DESC")
+    List<Comment> findReceivedCommentsByUploaderId(@Param("uid") Long uid);
+
     @Query("SELECT COALESCE(COUNT(c),0) FROM Comment c WHERE c.track.uploader.id = :uid")
     Long countCommentsByUploaderId(@Param("uid") Long uid);
 

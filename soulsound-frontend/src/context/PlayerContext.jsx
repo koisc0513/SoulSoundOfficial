@@ -1,5 +1,6 @@
 import { createContext, useContext, useRef, useState, useEffect, useCallback } from 'react'
-import api, { tracksApi } from '../api/index.js'
+import api, { tracksApi, usersApi } from '../api/index.js'
+import { useAuth } from './AuthContext'
 
 const PlayerContext = createContext(null)
 
@@ -7,6 +8,8 @@ const audioEl = new Audio()
 audioEl.preload = 'metadata'
 
 export function PlayerProvider({ children }) {
+
+  const { user } = useAuth()
 
   const [currentTrack, setCurrentTrack] = useState(null)
   const [playlist, setPlaylist]         = useState([])
@@ -23,6 +26,22 @@ export function PlayerProvider({ children }) {
 
   const [likedTracks,     setLikedTracks]     = useState([])
   const [trackLikeCounts, setTrackLikeCounts] = useState({})
+
+  // Fetch danh sách đã tim từ server mỗi khi user thay đổi (login/logout/reload)
+  useEffect(() => {
+    if (!user) {
+      setLikedTracks([])
+      setTrackLikeCounts({})
+      return
+    }
+    usersApi.getLiked()
+      .then(res => {
+        const tracks = res.data || []
+        setLikedTracks(tracks.map(t => t.id))
+        setTrackLikeCounts(Object.fromEntries(tracks.map(t => [t.id, t.likeCount ?? 0])))
+      })
+      .catch(() => {})
+  }, [user?.id])
 
   // Refs: avoid stale closures in audio event handlers
   const playlistRef     = useRef([])
