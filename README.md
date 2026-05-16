@@ -465,6 +465,9 @@ Tất cả API có prefix `/api`. JWT token gửi qua header `Authorization: Bea
 
 Trong môi trường Docker, các biến này được khai báo trong `docker-compose.yml`. Khi chạy local, có thể ghi đè trong `application.properties` hoặc truyền qua `-Dtên.biến=giá_trị`.
 
+Danh mục hình ảnh demo
+1. Trang chủ
+<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/7de46f7e-26d5-4b28-9c70-cf1e2c2ae977" />
 ---
 
 ## 👨‍💻 Tác giả
