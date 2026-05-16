@@ -465,25 +465,95 @@ Tất cả API có prefix `/api`. JWT token gửi qua header `Authorization: Bea
 
 Trong môi trường Docker, các biến này được khai báo trong `docker-compose.yml`. Khi chạy local, có thể ghi đè trong `application.properties` hoặc truyền qua `-Dtên.biến=giá_trị`.
 
-Danh mục hình ảnh demo
-1. Home
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/7de46f7e-26d5-4b28-9c70-cf1e2c2ae977" />
-2. Profile
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/6c3cf025-8e96-4f98-a796-23a6ba9b4aa2" />
-3. User Overview
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/56d4d895-e8de-42c8-8ce4-2e0ffc2d055a" />
-4. Playlist
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/0d7e2e56-b1dc-47d2-aae9-05599db21a7c" />
-5. Track Detail
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/77982903-2ed8-405e-89aa-61fe2f951969" />
-6. Admin Dashboard
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/25961797-2f6d-44c8-98a6-61c674cc7cfa" />
-7. Admin Overview
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/11f2ac3e-9d9c-444d-91db-3994a7e1867e" />
-8. Admin User
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/949009dd-3a14-4e5f-bb04-106fa1860f34" />
-9. Admin Track
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/42abaa0a-91ea-4f30-8758-9fb8ba721f6b" />
+## Danh mục hình ảnh demo
+
+<div align="center">
+
+### 🎵 Home Page
+
+<img width="1920" height="1080" alt="Home Page" src="https://github.com/user-attachments/assets/7de46f7e-26d5-4b28-9c70-cf1e2c2ae977" />
+
+</div>
+
+---
+
+<div align="center">
+
+### 👤 Profile Page
+
+<img width="1920" height="1080" alt="Profile Page" src="https://github.com/user-attachments/assets/6c3cf025-8e96-4f98-a796-23a6ba9b4aa2" />
+
+</div>
+
+---
+
+<div align="center">
+
+### 📊 User Overview Dashboard
+
+<img width="1920" height="1080" alt="User Overview" src="https://github.com/user-attachments/assets/56d4d895-e8de-42c8-8ce4-2e0ffc2d055a" />
+
+</div>
+
+---
+
+<div align="center">
+
+### 🎼 Playlist Management
+
+<img width="1920" height="1080" alt="Playlist Page" src="https://github.com/user-attachments/assets/0d7e2e56-b1dc-47d2-aae9-05599db21a7c" />
+
+</div>
+
+---
+
+<div align="center">
+
+### 🎧 Track Detail Page
+
+<img width="1920" height="1080" alt="Track Detail" src="https://github.com/user-attachments/assets/77982903-2ed8-405e-89aa-61fe2f951969" />
+
+</div>
+
+---
+
+<div align="center">
+
+### ⚙️ Admin Dashboard
+
+<img width="1920" height="1080" alt="Admin Dashboard" src="https://github.com/user-attachments/assets/25961797-2f6d-44c8-98a6-61c674cc7cfa" />
+
+</div>
+
+---
+
+<div align="center">
+
+### 📈 Admin Overview Analytics
+
+<img width="1920" height="1080" alt="Admin Overview" src="https://github.com/user-attachments/assets/11f2ac3e-9d9c-444d-91db-3994a7e1867e" />
+
+</div>
+
+---
+
+<div align="center">
+
+### 👥 Admin User Management
+
+<img width="1920" height="1080" alt="Admin User" src="https://github.com/user-attachments/assets/949009dd-3a14-4e5f-bb04-106fa1860f34" />
+
+</div>
+
+---
+
+<div align="center">
+
+### 🎶 Admin Track Management
+
+<img width="1920" height="1080" alt="Admin Track" src="https://github.com/user-attachments/assets/42abaa0a-91ea-4f30-8758-9fb8ba721f6b" />
+
+</div>
 ---
 
 ## 👨‍💻 Tác giả
