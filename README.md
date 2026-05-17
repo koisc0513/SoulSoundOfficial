@@ -471,7 +471,7 @@ Trong môi trường Docker, các biến này được khai báo trong `docker-c
 
 ### 🎵 Home Page
 
-<img width="1920" height="1080" alt="Home Page" src="https://github.com/user-attachments/assets/7de46f7e-26d5-4b28-9c70-cf1e2c2ae977" />
+<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/95b8c28c-22ff-4c29-a69b-f116861557e4" />
 
 </div>
 
