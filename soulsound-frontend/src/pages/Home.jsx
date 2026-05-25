@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { tracksApi, usersApi, searchApi } from '../api/index.js'
+import { tracksApi, usersApi, searchApi, playlistsApi } from '../api/index.js'
 import { useAuth } from "../context/AuthContext"
 import { usePlayer } from "../context/PlayerContext"
 import TrackCard     from '../components/Track/TrackCard'
@@ -19,6 +19,7 @@ export default function Home() {
   const [suggested,     setSuggested]     = useState([])
   const [likedIds,      setLikedIds]      = useState(new Set())
   const [overviewPlays, setOverviewPlays] = useState(null)
+  const [myPlaylists,   setMyPlaylists]   = useState([])
   const [loading,       setLoading]       = useState(true)
   const [modalTrackId,  setModalTrackId]  = useState(null)
   const [selectedGenre, setSelectedGenre] = useState('')
@@ -28,6 +29,7 @@ export default function Home() {
 
   useEffect(() => {
     loadFeed(0)
+    playlistsApi.getAllPublic().then(r => setMyPlaylists(r.data || [])).catch(()=>{})
     if (user) {
       usersApi.getSuggested().then(r => setSuggested(r.data)).catch(()=>{})
       usersApi.getHistory(0).then(r => {
@@ -111,6 +113,41 @@ export default function Home() {
                     <div style={{ fontSize:'0.74rem',color:'var(--accent)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{t.artist}</div>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* All Public Playlists */}
+        {myPlaylists.length > 0 && (
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <i className="bi bi-collection-play-fill" style={{ color: 'var(--accent)' }}></i> Playlist nổi bật
+              </h2>
+              {myPlaylists.length > 6 && (
+                <Link to="/playlists" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Xem tất cả {myPlaylists.length} playlist →
+                </Link>
+              )}
+            </div>
+            <div className="playlist-tile-grid playlist-tile-grid--main">
+              {myPlaylists.slice(0, 6).map(pl => (
+                <Link key={pl.id} to={`/playlists/${pl.id}`} className="playlist-tile">
+                  <div className="playlist-tile__cover">
+                    {pl.coverUrl
+                      ? <img src={pl.coverUrl} alt={pl.name} onError={e => { e.target.src = '/images/default-thumb.png' }} />
+                      : <div className="playlist-tile__cover-placeholder"><i className="bi bi-collection-play"></i></div>
+                    }
+                    {pl.privacy === 'PRIVATE' && (
+                      <span className="playlist-tile__lock"><i className="bi bi-lock-fill"></i></span>
+                    )}
+                  </div>
+                  <div className="playlist-tile__info">
+                    <span className="playlist-tile__name">{pl.name}</span>
+                    <span className="playlist-tile__owner">{pl.ownerName}</span>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>

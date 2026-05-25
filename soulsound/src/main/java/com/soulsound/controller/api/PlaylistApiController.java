@@ -30,6 +30,13 @@ public class PlaylistApiController {
         this.fileStorageService = fileStorageService;
     }
 
+    // GET /api/playlists/public  — không cần đăng nhập
+    @GetMapping("/public")
+    public ResponseEntity<?> getAllPublicPlaylists() {
+        List<Playlist> playlists = playlistService.getAllPublic();
+        return ResponseEntity.ok(playlists.stream().map(this::playlistDto).collect(Collectors.toList()));
+    }
+
     // GET /api/playlists
     @GetMapping
     public ResponseEntity<?> getMyPlaylists(@AuthenticationPrincipal UserDetails principal) {
@@ -190,6 +197,9 @@ public class PlaylistApiController {
         m.put("description", p.getDescription() != null ? p.getDescription() : "");
         m.put("trackCount",  p.getTrackCount());
         m.put("coverUrl",    p.getCoverUrl() != null ? p.getCoverUrl() : "");
+        m.put("privacy",     p.getPrivacy().name());
+        m.put("ownerName",   p.getOwner().getFullName());
+        m.put("ownerEmail",  p.getOwner().getEmail());
         return m;
     }
 

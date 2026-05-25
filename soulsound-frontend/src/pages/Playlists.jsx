@@ -59,7 +59,14 @@ export default function Playlists() {
                   onMouseOver={e=>{e.currentTarget.style.borderColor='var(--accent)';e.currentTarget.style.transform='translateY(-2px)'}}
                   onMouseOut={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.transform=''}}>
                   <Link to={`/playlists/${pl.id}`} style={{ display: 'block', padding: '20px', textDecoration: 'none' }}>
-                    <div style={{ width: '100%', height: '100px', background: 'linear-gradient(135deg,#1a0800,#2d1000)', borderRadius: 'var(--radius-sm)', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem' }}>🎵</div>
+                    <div style={{ width: '100%', height: '140px', background: 'linear-gradient(135deg,#1a0800,#2d1000)', borderRadius: 'var(--radius-sm)', marginBottom: '12px', overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem' }}>
+                      {pl.coverUrl
+                        ? <img src={pl.coverUrl} alt={pl.name}
+                            onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex' }}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+                        : null}
+                      <span style={{ display: pl.coverUrl ? 'none' : 'flex' }}>🎵</span>
+                    </div>
                     <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pl.name}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>{pl.trackCount} bài hát</div>
                   </Link>

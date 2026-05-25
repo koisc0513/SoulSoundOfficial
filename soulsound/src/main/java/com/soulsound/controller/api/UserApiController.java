@@ -309,20 +309,20 @@ public class UserApiController {
                     })
                     .collect(Collectors.toList());
 
-            // Top 5 listeners (30 ngay)
+            // Top 5 listeners (30 ngay) — tính theo lượt nghe thực tế
             LocalDateTime since30 = LocalDateTime.now().minusDays(30);
-            List<Object[]> topListenersRaw = likeRepo.findTopListenersByUploaderId(
+            List<Object[]> topListenersRaw = historyRepo.findTopListenersByUploaderId(
                     uid, since30, PageRequest.of(0, 5));
             List<Map<String, Object>> topListenersDto = topListenersRaw.stream()
                     .map(row -> {
-                        User u = (User) row[0];
+                        User u   = (User) row[0];
                         Long cnt = (Long) row[1];
                         Map<String, Object> m = new LinkedHashMap<>();
-                        m.put("id",           u.getId());
-                        m.put("fullName",     u.getFullName());
-                        m.put("email",        u.getEmail());
-                        m.put("avatarUrl",    u.getAvatarUrl() != null ? u.getAvatarUrl() : "");
-                        m.put("likeCount",    cnt);
+                        m.put("id",         u.getId());
+                        m.put("fullName",    u.getFullName());
+                        m.put("email",       u.getEmail());
+                        m.put("avatarUrl",   u.getAvatarUrl() != null ? u.getAvatarUrl() : "");
+                        m.put("listenCount", cnt);
                         return m;
                     })
                     .collect(Collectors.toList());

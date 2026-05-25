@@ -18,8 +18,9 @@ import History      from './pages/History'
 import Playlists    from './pages/Playlists'
 import PlaylistDetail from './pages/PlaylistDetail'
 import AdminDashboard from './pages/admin/Dashboard'
-import AdminUsers   from './pages/admin/Users'
-import AdminTracks  from './pages/admin/Tracks'
+import AdminUsers     from './pages/admin/Users'
+import AdminTracks    from './pages/admin/Tracks'
+import AdminOverview  from './pages/admin/AdminOverview'
  import Overview      from './pages/Overview'
 
 // Guard: chỉ cho phép authenticated
@@ -83,6 +84,9 @@ export default function App() {
             {/* Admin */}
             <Route path="/admin/dashboard" element={
               <AdminRoute><AdminDashboard /></AdminRoute>
+            }/>
+            <Route path="/admin/overview" element={
+              <AdminRoute><AdminOverview /></AdminRoute>
             }/>
             <Route path="/admin/users" element={
               <AdminRoute><AdminUsers /></AdminRoute>

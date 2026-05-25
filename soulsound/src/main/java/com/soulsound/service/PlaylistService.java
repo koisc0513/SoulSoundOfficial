@@ -144,6 +144,11 @@ public class PlaylistService {
         return playlistRepo.findByOwnerIdOrderByCreatedAtDesc(ownerId);
     }
 
+    @Transactional(readOnly = true)
+    public List<Playlist> getAllPublic() {
+        return playlistRepo.findByPrivacyOrderByCreatedAtDesc(TrackPrivacy.PUBLIC);
+    }
+
     // ── Helper ──────────────────────────────────────────────────────
 
     private void checkOwner(Playlist playlist, Long requesterId) {

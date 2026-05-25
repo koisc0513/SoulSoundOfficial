@@ -1853,3 +1853,119 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   color: var(--text-primary);
   font-size: 0.9rem;
 }
+/* ═══════════════════════════════════════════════════════
+   PLAYLIST TILE GRID (sidebar widget)
+══════════════════════════════════════════════════════ */
+
+.playlist-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+/* Playlist grid khi nằm trong layout__main (rộng hơn sidebar) */
+.playlist-tile-grid--main {
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 1100px) {
+  .playlist-tile-grid--main { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 700px) {
+  .playlist-tile-grid--main { grid-template-columns: repeat(3, 1fr); }
+}
+
+.playlist-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+.playlist-tile:hover { opacity: 0.85; }
+
+/* Square cover */
+.playlist-tile__cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+}
+.playlist-tile__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Placeholder khi không có cover */
+.playlist-tile__cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-size: 1.6rem;
+}
+
+/* Lock badge - góc trên phải */
+.playlist-tile__lock {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: #fff;
+}
+
+/* Text info below cover */
+.playlist-tile__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.playlist-tile__name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.playlist-tile__owner {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* See all link */
+.playlist-tile__see-all {
+  display: block;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-decoration: none;
+  margin-top: 6px;
+  padding: 6px 0;
+  transition: color var(--transition);
+}
+.playlist-tile__see-all:hover { color: var(--accent-hover); }

@@ -19,7 +19,7 @@ public class Notification {
     private User recipient;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "VARCHAR(50)")
     private NotificationType type;
 
     // Nội dung hiển thị (ví dụ: "Phú Lê đã thích bài hát của bạn")

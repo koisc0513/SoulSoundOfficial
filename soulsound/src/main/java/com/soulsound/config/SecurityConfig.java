@@ -91,6 +91,8 @@ public class SecurityConfig {
                         // ── Notifications (yêu cầu đăng nhập) ───────────
                         .requestMatchers(HttpMethod.GET,  "/api/notifications/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/notifications/**").authenticated()
+                        // SSE endpoint — không cache, không timeout
+                        .requestMatchers(HttpMethod.GET,  "/api/notifications/stream").authenticated()
 
                         // ── Admin only ───────────────────────────────────
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

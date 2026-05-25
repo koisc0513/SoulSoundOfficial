@@ -161,10 +161,7 @@ public class TrackService {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("User không tồn tại."));
 
-        // Xóa record cũ
-        historyRepo.deleteByUser_IdAndTrack_Id(userId, trackId);
-
-        // Insert mới
+        // Không xóa record cũ — mỗi lần nghe là 1 row mới để count đúng
         historyRepo.save(new ListeningHistory(user, track));
     }
 
@@ -319,7 +316,8 @@ public class TrackService {
     @Transactional(readOnly = true)
     public Page<ListeningHistory> getHistory(Long userId, int page) {
         Pageable pageable = PageRequest.of(page, 20);
-        return historyRepo.findByUser_IdOrderByListenedAtDesc(userId, pageable);
+        // Dùng query dedup: chỉ lấy lần nghe mới nhất mỗi bài
+        return historyRepo.findLatestPerTrackByUserId(userId, pageable);
     }
 
     /** Xóa 1 bài khỏi lịch sử nghe */

@@ -1,0 +1,10 @@
+# Secret – không commit
+.env
+
+# Build output
+target/
+node_modules/
+dist/
+
+# Logs
+*.log

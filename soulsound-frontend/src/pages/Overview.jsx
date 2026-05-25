@@ -497,7 +497,7 @@ export default function Overview() {
                         <span className="ov-listener-row__name">{u.fullName}</span>
                       </div>
                       <div className="ov-listener-row__count">
-                        <i className="bi bi-heart-fill" /> {u.likeCount}
+                        <i className="bi bi-play-circle-fill" /> {u.listenCount?.toLocaleString()}
                       </div>
                     </Link>
                   ))}

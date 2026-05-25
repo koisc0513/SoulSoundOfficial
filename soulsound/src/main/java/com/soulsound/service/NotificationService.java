@@ -3,6 +3,8 @@ package com.soulsound.service;
 import com.soulsound.entity.*;
 import com.soulsound.repository.NotificationRepository;
 import org.springframework.data.domain.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +15,11 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notifRepo;
+    private final SseEmitterService        sseService;
 
-    public NotificationService(NotificationRepository notifRepo) {
-        this.notifRepo = notifRepo;
+    public NotificationService(NotificationRepository notifRepo, SseEmitterService sseService) {
+        this.notifRepo  = notifRepo;
+        this.sseService = sseService;
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -24,12 +28,31 @@ public class NotificationService {
     // duplicate dù action lặp lại nhiều lần.
     // ══════════════════════════════════════════════════════════════
 
+
+    /** Push event SSE ngay lập tức đến user đang online */
+    private void push(Notification n) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("id",               n.getId());
+        payload.put("type",             n.getType().name());
+        payload.put("message",          n.getMessage());
+        payload.put("read",             false);
+        payload.put("createdAt",        n.getCreatedAt() != null ? n.getCreatedAt().toString() : "");
+        payload.put("actorName",        n.getActorName()         != null ? n.getActorName()         : "");
+        payload.put("actorAvatarUrl",   n.getActorAvatarUrl()    != null ? n.getActorAvatarUrl()    : "");
+        payload.put("actorEmail",       n.getActorEmail()        != null ? n.getActorEmail()        : "");
+        payload.put("trackId",          (Object) n.getTrackId());
+        payload.put("trackTitle",       n.getTrackTitle()        != null ? n.getTrackTitle()        : "");
+        payload.put("trackThumbnailUrl",n.getTrackThumbnailUrl() != null ? n.getTrackThumbnailUrl() : "");
+        sseService.pushToUser(n.getRecipient().getId(), payload);
+    }
+
     private void upsert(List<Notification> duplicates, Notification fresh) {
         if (!duplicates.isEmpty()) {
             notifRepo.deleteAll(duplicates);
             notifRepo.flush();
         }
-        notifRepo.save(fresh);
+        Notification saved = notifRepo.save(fresh);
+        push(saved);
     }
 
     // ── Factory helpers ────────────────────────────────────────────
@@ -136,7 +159,6 @@ public class NotificationService {
 
     /**
      * ACCOUNT_BANNED: unique trên (recipient, type)
-     * → admin block / unblock / block lại → vẫn chỉ 1 thông báo
      */
     public void notifyAccountBanned(User user) {
         List<Notification> existing = notifRepo
@@ -151,8 +173,22 @@ public class NotificationService {
     }
 
     /**
+     * ACCOUNT_UNBANNED: unique trên (recipient, type)
+     */
+    public void notifyAccountUnbanned(User user) {
+        List<Notification> existing = notifRepo
+                .findByRecipientIdAndType(user.getId(), NotificationType.ACCOUNT_UNBANNED);
+
+        Notification n = new Notification();
+        n.setRecipient(user);
+        n.setType(NotificationType.ACCOUNT_UNBANNED);
+        n.setMessage("Tài khoản của bạn đã được quản trị viên mở khóa. Chào mừng trở lại!");
+
+        upsert(existing, n);
+    }
+
+    /**
      * TRACK_HIDDEN: unique trên (recipient, type, trackId)
-     * → admin ẩn / hiện / ẩn lại cùng track → vẫn chỉ 1 thông báo
      */
     public void notifyTrackHidden(Track track) {
         List<Notification> existing = notifRepo
@@ -168,6 +204,36 @@ public class NotificationService {
         n.setTrackThumbnailUrl(track.getThumbnailUrl());
 
         upsert(existing, n);
+    }
+
+    /**
+     * TRACK_UNHIDDEN: unique trên (recipient, type, trackId)
+     */
+    public void notifyTrackUnhidden(Track track) {
+        List<Notification> existing = notifRepo
+                .findByRecipientIdAndTypeAndTrackId(
+                        track.getUploader().getId(), NotificationType.TRACK_UNHIDDEN, track.getId());
+
+        Notification n = new Notification();
+        n.setRecipient(track.getUploader());
+        n.setType(NotificationType.TRACK_UNHIDDEN);
+        n.setMessage("Bài hát \"" + track.getTitle() + "\" của bạn đã được khôi phục hiển thị.");
+        n.setTrackId(track.getId());
+        n.setTrackTitle(track.getTitle());
+        n.setTrackThumbnailUrl(track.getThumbnailUrl());
+
+        upsert(existing, n);
+    }
+
+    /**
+     * ADMIN_MESSAGE: mỗi lần gửi là 1 thông báo độc lập (không dedup)
+     */
+    public void notifyAdminMessage(User recipient, String message) {
+        Notification n = new Notification();
+        n.setRecipient(recipient);
+        n.setType(NotificationType.ADMIN_MESSAGE);
+        n.setMessage(message);
+        notifRepo.save(n);
     }
 
     // ── Queries ────────────────────────────────────────────────────

@@ -36,6 +36,8 @@ export const authApi = {
   login:    (email, password) => api.post('/auth/login',    { email, password }),
   register: (data)            => api.post('/auth/register', data),
   me:       ()                => api.get('/auth/me'),
+  google:   (idToken)         => api.post('/auth/google',   { idToken }),
+  facebook: (accessToken)     => api.post('/auth/facebook', { accessToken }),
 }
 
 
@@ -87,6 +89,7 @@ export const searchApi = {
 // ─────────────────────────────────────────────────────────────
 export const playlistsApi = {
   getAll:       ()                  => api.get('/playlists'),
+  getAllPublic:  ()                  => api.get('/playlists/public'),
   getById:      (id)                => api.get(`/playlists/${id}`),
   create:       (name, description) => api.post('/playlists', { name, description }),
   update:       (id, name, description) => api.put(`/playlists/${id}`, { name, description }),
@@ -104,11 +107,14 @@ export const playlistsApi = {
 // src/api/admin.js
 // ─────────────────────────────────────────────────────────────
 export const adminApi = {
-  getDashboard: () => api.get('/admin/dashboard'),
-  getUsers:     (page = 0) => api.get(`/admin/users?page=${page}`),
-  getTracks:    (page = 0) => api.get(`/admin/tracks?page=${page}`),
-  blockUser:    (id) => api.post(`/admin/users/${id}/toggle-block`),
-  hideTrack:    (id) => api.post(`/admin/tracks/${id}/toggle-hidden`),
+  getDashboard:     ()           => api.get('/admin/dashboard'),
+  getUsers:         (page = 0)   => api.get(`/admin/users?page=${page}`),
+  getTracks:        (page = 0)   => api.get(`/admin/tracks?page=${page}`),
+  blockUser:        (id)         => api.post(`/admin/users/${id}/toggle-block`),
+  hideTrack:        (id)         => api.post(`/admin/tracks/${id}/toggle-hidden`),
+  getUserOverview:  (id)         => api.get(`/admin/users/${id}/overview`),
+  sendMessage:      (id, message)=> api.post(`/admin/users/${id}/message`, { message }),
+  getTrackComments: (id)         => api.get(`/admin/tracks/${id}/comments`),
 }
 
 

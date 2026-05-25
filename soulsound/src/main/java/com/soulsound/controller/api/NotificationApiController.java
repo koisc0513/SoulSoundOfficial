@@ -3,6 +3,9 @@ package com.soulsound.controller.api;
 import com.soulsound.entity.Notification;
 import com.soulsound.entity.User;
 import com.soulsound.service.NotificationService;
+import com.soulsound.service.SseEmitterService;
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.soulsound.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +23,26 @@ public class NotificationApiController {
 
     private final NotificationService notifService;
     private final UserService         userService;
+    private final SseEmitterService   sseEmitterService;
 
-    public NotificationApiController(NotificationService notifService, UserService userService) {
-        this.notifService = notifService;
-        this.userService  = userService;
+    public NotificationApiController(NotificationService notifService,
+                                     UserService userService,
+                                     SseEmitterService sseEmitterService) {
+        this.notifService      = notifService;
+        this.userService       = userService;
+        this.sseEmitterService = sseEmitterService;
+    }
+
+    // GET /api/notifications/stream  — SSE realtime
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter stream(@AuthenticationPrincipal UserDetails principal) {
+        if (principal == null) {
+            SseEmitter emitter = new SseEmitter();
+            emitter.completeWithError(new RuntimeException("Unauthorized"));
+            return emitter;
+        }
+        User user = userService.findByEmail(principal.getUsername());
+        return sseEmitterService.subscribe(user.getId());
     }
 
     // GET /api/notifications?page=0
@@ -95,7 +114,9 @@ public class NotificationApiController {
         m.put("type",             n.getType().name());
         m.put("message",          n.getMessage());
         m.put("read",             n.isRead());
-        m.put("createdAt",        n.getCreatedAt() != null ? n.getCreatedAt().toString() : "");
+        m.put("createdAt",        n.getCreatedAt() != null
+                ? n.getCreatedAt().toString() + "Z"
+                : "");
         m.put("actorName",        n.getActorName()        != null ? n.getActorName()        : "");
         m.put("actorAvatarUrl",   n.getActorAvatarUrl()   != null ? n.getActorAvatarUrl()   : "");
         m.put("actorEmail",       n.getActorEmail()       != null ? n.getActorEmail()       : "");

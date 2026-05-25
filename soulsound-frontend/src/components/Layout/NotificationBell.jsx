@@ -160,11 +160,55 @@ export default function NotificationBell() {
     finally { setLoading(false) }
   }, [])
 
-  // Poll unread count mỗi 30s
+  // ── SSE: nhận thông báo realtime từ server ────────────────────
   useEffect(() => {
-    fetchUnread()
-    pollRef.current = setInterval(fetchUnread, 30000)
-    return () => clearInterval(pollRef.current)
+    const token = localStorage.getItem('ss_token')
+    if (!token) return
+
+    let es
+    let fallbackTimer
+
+    const connect = () => {
+      // Truyền JWT qua query param vì EventSource không hỗ trợ custom header
+      es = new EventSource(`/api/notifications/stream?token=${token}`)
+
+      es.addEventListener('connected', () => {
+        // Kết nối thành công — fetch lại badge count
+        fetchUnread()
+        // Xóa fallback polling nếu đang chạy
+        clearInterval(fallbackTimer)
+        // Fallback polling 60s (dự phòng khi SSE mất kết nối)
+        fallbackTimer = setInterval(fetchUnread, 60000)
+      })
+
+      es.addEventListener('notification', (e) => {
+        try {
+          const notif = JSON.parse(e.data)
+          // Tăng badge ngay lập tức
+          setUnread(u => u + 1)
+          // Nếu panel đang mở → prepend thông báo mới lên đầu
+          setNotifications(prev => [notif, ...prev])
+        } catch {}
+      })
+
+      es.addEventListener('ping', () => {
+        // Keep-alive ping từ server — không làm gì
+      })
+
+      es.onerror = () => {
+        es.close()
+        // Reconnect sau 5 giây
+        setTimeout(connect, 5000)
+      }
+    }
+
+    connect()
+    fetchUnread() // fetch ngay lần đầu
+
+    return () => {
+      if (es) es.close()
+      clearInterval(fallbackTimer)
+    }
   }, [fetchUnread])
 
   // Close khi click outside
