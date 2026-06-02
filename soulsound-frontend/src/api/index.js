@@ -33,11 +33,13 @@ export default api
 // src/api/auth.js
 // ─────────────────────────────────────────────────────────────
 export const authApi = {
-  login:    (email, password) => api.post('/auth/login',    { email, password }),
-  register: (data)            => api.post('/auth/register', data),
-  me:       ()                => api.get('/auth/me'),
-  google:   (idToken)         => api.post('/auth/google',   { idToken }),
-  facebook: (accessToken)     => api.post('/auth/facebook', { accessToken }),
+  login:          (email, password) => api.post('/auth/login',           { email, password }),
+  register:       (data)            => api.post('/auth/register',         data),
+  me:             ()                => api.get('/auth/me'),
+  google:         (idToken)         => api.post('/auth/google',            { idToken }),
+  facebook:       (accessToken)     => api.post('/auth/facebook',          { accessToken }),
+  forgotPassword: (email)           => api.post('/auth/forgot-password',   { email }),
+  resetPassword:  (token, password) => api.post('/auth/reset-password',    { token, password }),
 }
 
 
@@ -55,6 +57,7 @@ export const tracksApi = {
   addComment:    (id, content)            => api.post(`/tracks/${id}/comments`, { content }),
   replyComment:  (id, commentId, content) => api.post(`/tracks/${id}/comments/${commentId}/reply`, { content }),
   deleteComment: (commentId)              => api.delete(`/tracks/comments/${commentId}`),
+  likeComment:   (trackId, commentId) => api.post(`/tracks/${trackId}/comments/${commentId}/like`),
 }
 
 

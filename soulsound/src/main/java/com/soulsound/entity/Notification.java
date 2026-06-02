@@ -46,6 +46,9 @@ public class Notification {
     @Column(name = "track_thumbnail_url")
     private String trackThumbnailUrl;
 
+    @Column(name = "comment_id")
+    private Long commentId;
+
     @Column(name = "is_read", nullable = false)
     private boolean read = false;
 
@@ -72,8 +75,10 @@ public class Notification {
     public void             setActorAvatarUrl(String s) { this.actorAvatarUrl = s; }
     public String           getActorEmail()        { return actorEmail; }
     public void             setActorEmail(String s){ this.actorEmail = s; }
-    public Long             getTrackId()           { return trackId; }
-    public void             setTrackId(Long id)    { this.trackId = id; }
+    public Long             getTrackId()              { return trackId; }
+    public void             setTrackId(Long id)       { this.trackId = id; }
+    public Long             getCommentId()            { return commentId; }
+    public void             setCommentId(Long id)     { this.commentId = id; }
     public String           getTrackTitle()        { return trackTitle; }
     public void             setTrackTitle(String s){ this.trackTitle = s; }
     public String           getTrackThumbnailUrl() { return trackThumbnailUrl; }

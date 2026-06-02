@@ -43,6 +43,13 @@ public class Comment {
     @org.hibernate.annotations.OrderBy(clause = "created_at ASC")
     private java.util.List<Comment> replies = new java.util.ArrayList<>();
 
+    /** Persistent like counter – updated atomically, avoids N+1 on collection */
+    @Column(name = "like_count", nullable = false)
+    private long likeCount = 0L;
+
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<CommentLike> likes = new java.util.ArrayList<>();
+
     // ── Constructors ───────────────────────────────────────
     public Comment() {}
 
@@ -71,4 +78,8 @@ public class Comment {
     public void setParent(Comment parent) { this.parent = parent; }
 
     public java.util.List<Comment> getReplies() { return replies; }
+
+    public long getLikeCount()              { return likeCount; }
+    public void setLikeCount(long likeCount){ this.likeCount = likeCount; }
+    public java.util.List<CommentLike> getLikes() { return likes; }
 }

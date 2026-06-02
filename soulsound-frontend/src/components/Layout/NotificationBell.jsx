@@ -30,6 +30,7 @@ function getIcon(type) {
     case 'TRACK_UPLOAD':   return 'bi-cloud-check-fill'
     case 'TRACK_LIKED':    return 'bi-heart-fill'
     case 'NEW_COMMENT':    return 'bi-chat-fill'
+    case 'COMMENT_LIKED':  return 'bi-heart-fill'
     case 'ACCOUNT_BANNED': return 'bi-slash-circle-fill'
     case 'TRACK_HIDDEN':   return 'bi-eye-slash-fill'
     default:               return 'bi-bell-fill'
@@ -42,6 +43,7 @@ function getIconColor(type) {
     case 'TRACK_UPLOAD':   return '#ff5500'
     case 'TRACK_LIKED':    return '#e91e63'
     case 'NEW_COMMENT':    return '#2196F3'
+    case 'COMMENT_LIKED':  return '#e91e63'
     case 'ACCOUNT_BANNED': return '#f44336'
     case 'TRACK_HIDDEN':   return '#FF9800'
     default:               return '#a0a0a0'
@@ -57,12 +59,16 @@ function NotificationItem({ notif, onRead }) {
     if (!notif.read) onRead(notif.id)
 
     // Điều hướng tuỳ loại thông báo
-    if ((notif.type === 'NEW_FOLLOWER') && notif.actorEmail) {
+    if (notif.type === 'NEW_FOLLOWER' && notif.actorEmail) {
       navigate(`/profile/${notif.actorEmail}`)
     } else if (notif.type === 'TRACK_LIKED' && notif.actorEmail) {
       navigate(`/profile/${notif.actorEmail}`)
     } else if (notif.type === 'NEW_COMMENT' && notif.actorEmail) {
       navigate(`/profile/${notif.actorEmail}`)
+    } else if (notif.type === 'COMMENT_LIKED' && notif.trackId) {
+      // Điều hướng đến track, thêm #comment-{id} để highlight
+      const hash = notif.commentId ? `#comment-${notif.commentId}` : ''
+      navigate(`/tracks/${notif.trackId}${hash}`)
     } else if (notif.trackId) {
       navigate(`/tracks/${notif.trackId}`)
     }

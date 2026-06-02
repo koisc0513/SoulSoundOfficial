@@ -19,6 +19,7 @@ public class TrackService {
     private final TrackRepository          trackRepo;
     private final LikeRepository           likeRepo;
     private final CommentRepository        commentRepo;
+    private final CommentLikeRepository    commentLikeRepo;
     private final ListeningHistoryRepository historyRepo;
     private final UserRepository           userRepo;
     private final FileStorageService       fileStorage;
@@ -27,14 +28,16 @@ public class TrackService {
     public TrackService(TrackRepository trackRepo,
                         LikeRepository likeRepo,
                         CommentRepository commentRepo,
+                        CommentLikeRepository commentLikeRepo,
                         ListeningHistoryRepository historyRepo,
                         UserRepository userRepo,
                         FileStorageService fileStorage,
                         NotificationService notifService) {  // ← NEW
         this.trackRepo    = trackRepo;
         this.likeRepo     = likeRepo;
-        this.commentRepo  = commentRepo;
-        this.historyRepo  = historyRepo;
+        this.commentRepo     = commentRepo;
+        this.commentLikeRepo = commentLikeRepo;
+        this.historyRepo     = historyRepo;
         this.userRepo     = userRepo;
         this.fileStorage  = fileStorage;
         this.notifService = notifService;                   // ← NEW
@@ -225,11 +228,6 @@ public class TrackService {
         User  user  = userRepo.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("User không tồn tại."));
 
-        // Chỉ uploader mới được reply
-        if (!track.getUploader().getId().equals(userId)) {
-            throw new SecurityException("Chỉ uploader mới có thể trả lời bình luận.");
-        }
-
         Comment parent = commentRepo.findById(parentCommentId)
                 .orElseThrow(() -> new NoSuchElementException("Bình luận không tồn tại."));
 
@@ -241,6 +239,40 @@ public class TrackService {
         Comment reply = new Comment(content.trim(), user, track);
         reply.setParent(parent);
         return commentRepo.save(reply);
+    }
+
+    /**
+     * Toggle like trên comment – mở cho tất cả user đã đăng nhập.
+     * Trả về Map { liked: bool, likeCount: long }
+     */
+    @Transactional
+    public java.util.Map<String, Object> toggleCommentLike(Long commentId, Long userId) {
+        Comment comment = commentRepo.findById(commentId)
+                .orElseThrow(() -> new java.util.NoSuchElementException("Comment không tồn tại."));
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new java.util.NoSuchElementException("User không tồn tại."));
+        Track track = trackRepo.findById(comment.getTrack().getId())
+                .orElseThrow(() -> new java.util.NoSuchElementException("Track không tồn tại."));
+
+        java.util.Optional<CommentLike> existing = commentLikeRepo.findByUserIdAndCommentId(userId, commentId);
+        boolean liked;
+        if (existing.isPresent()) {
+            commentLikeRepo.delete(existing.get());
+            commentLikeRepo.decrementLikeCount(commentId);
+            liked = false;
+        } else {
+            commentLikeRepo.save(new CommentLike(user, comment));
+            commentLikeRepo.incrementLikeCount(commentId);
+            liked = true;
+            // Gửi thông báo cho tác giả comment (chỉ khi like mới)
+            notifService.notifyCommentLiked(user, comment, track);
+        }
+
+        Comment updated = commentRepo.findById(commentId).orElse(comment);
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("liked",     liked);
+        result.put("likeCount", updated.getLikeCount());
+        return result;
     }
 
     public void deleteComment(Long commentId, Long requesterId) {

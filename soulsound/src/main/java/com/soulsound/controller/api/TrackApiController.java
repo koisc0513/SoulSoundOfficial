@@ -4,6 +4,7 @@ import com.soulsound.dto.TrackEditDto;
 import com.soulsound.dto.TrackUploadDto;
 import com.soulsound.entity.*;
 import com.soulsound.repository.CommentRepository;
+import com.soulsound.repository.CommentLikeRepository;
 import com.soulsound.service.TrackService;
 import com.soulsound.service.UserService;
 import org.springframework.data.domain.Page;
@@ -20,14 +21,17 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/tracks")
 public class TrackApiController {
 
-    private final TrackService      trackService;
-    private final UserService       userService;
-    private final CommentRepository commentRepo;
+    private final TrackService          trackService;
+    private final UserService           userService;
+    private final CommentRepository     commentRepo;
+    private final CommentLikeRepository commentLikeRepo;
 
-    public TrackApiController(TrackService trackService, UserService userService, CommentRepository commentRepo) {
-        this.trackService = trackService;
-        this.userService  = userService;
-        this.commentRepo  = commentRepo;
+    public TrackApiController(TrackService trackService, UserService userService,
+                              CommentRepository commentRepo, CommentLikeRepository commentLikeRepo) {
+        this.trackService    = trackService;
+        this.userService     = userService;
+        this.commentRepo     = commentRepo;
+        this.commentLikeRepo = commentLikeRepo;
     }
 
     // GET /api/tracks?page=0
@@ -57,7 +61,9 @@ public class TrackApiController {
                 return ResponseEntity.status(403).body(Map.of("error", "Không có quyền xem."));
             }
 
-            Map<String, Object> dto = trackDetailDto(track);
+            Long currentUserId = principal != null
+                    ? userService.findByEmail(principal.getUsername()).getId() : null;
+            Map<String, Object> dto = trackDetailDto(track, currentUserId);
 
             if (principal != null) {
                 User user = userService.findByEmail(principal.getUsername());
@@ -155,13 +161,13 @@ public class TrackApiController {
         try {
             User user    = userService.findByEmail(principal.getUsername());
             Comment c    = trackService.addComment(id, user.getId(), body.get("content"));
-            return ResponseEntity.ok(commentDto(c));
+            return ResponseEntity.ok(commentDto(c, null));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    // POST /api/tracks/{id}/comments/{commentId}/reply  — chỉ uploader
+    // POST /api/tracks/{id}/comments/{commentId}/reply  — mọi user đã đăng nhập
     @PostMapping("/{id}/comments/{commentId}/reply")
     public ResponseEntity<?> replyComment(
             @PathVariable Long id,
@@ -169,12 +175,29 @@ public class TrackApiController {
             @RequestBody Map<String, String> body,
             @AuthenticationPrincipal UserDetails principal) {
 
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập."));
         try {
             User user  = userService.findByEmail(principal.getUsername());
             Comment c  = trackService.replyComment(id, commentId, user.getId(), body.get("content"));
-            return ResponseEntity.ok(commentDto(c));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.ok(commentDto(c, null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // POST /api/tracks/{trackId}/comments/{commentId}/like
+    @PostMapping("/{trackId}/comments/{commentId}/like")
+    public ResponseEntity<?> likeComment(
+            @PathVariable Long trackId,
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal UserDetails principal) {
+
+        if (principal == null)
+            return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập."));
+        try {
+            User user = userService.findByEmail(principal.getUsername());
+            return ResponseEntity.ok(trackService.toggleCommentLike(commentId, user.getId()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -222,33 +245,55 @@ public class TrackApiController {
     }
 
     private Map<String, Object> trackDetailDto(Track t) {
+        return trackDetailDto(t, null);
+    }
+
+    private Map<String, Object> trackDetailDto(Track t, Long currentUserId) {
         Map<String, Object> m = new LinkedHashMap<>(trackDto(t));
-        // Chỉ lấy bình luận gốc (parent == null), replies được nhúng bên trong mỗi comment
-        m.put("comments", commentRepo.findByTrackIdAndParentIsNullOrderByCreatedAtAsc(t.getId())
-                .stream()
-                .map(this::commentDto)
+        java.util.List<Comment> rootComments =
+                commentRepo.findByTrackIdAndParentIsNullOrderByCreatedAtAsc(t.getId());
+
+        // Build set of comment IDs liked by current user (single query, no N+1)
+        java.util.Set<Long> likedIds = java.util.Collections.emptySet();
+        if (currentUserId != null && !rootComments.isEmpty()) {
+            java.util.List<Long> allIds = new java.util.ArrayList<>();
+            for (Comment c : rootComments) {
+                allIds.add(c.getId());
+                for (Comment r : c.getReplies()) allIds.add(r.getId());
+            }
+            likedIds = commentLikeRepo.findLikedCommentIds(currentUserId, allIds);
+        }
+
+        final java.util.Set<Long> likedIdsFinal = likedIds;
+        m.put("comments", rootComments.stream()
+                .map(c -> commentDto(c, likedIdsFinal))
                 .collect(Collectors.toList()));
         return m;
     }
 
-    private Map<String, Object> commentDto(Comment c) {
+    private Map<String, Object> commentDto(Comment c, java.util.Set<Long> likedIds) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id",        c.getId());
         m.put("content",   c.getContent());
         m.put("createdAt", c.getCreatedAt().toString());
+        m.put("likeCount", c.getLikeCount());
+        m.put("isLiked",   likedIds != null && likedIds.contains(c.getId()));
         m.put("author", Map.of(
                 "id",        c.getAuthor().getId(),
                 "fullName",  c.getAuthor().getFullName(),
                 "email",     c.getAuthor().getEmail(),
                 "avatarUrl", c.getAuthor().getAvatarUrl() != null ? c.getAuthor().getAvatarUrl() : ""
         ));
-        // Nhúng replies (chỉ 1 cấp — không đệ quy)
+        // Replies (1 cấp)
+        final java.util.Set<Long> _likedIds = likedIds != null ? likedIds : java.util.Collections.emptySet();
         m.put("replies", c.getReplies().stream()
                 .map(r -> {
                     Map<String, Object> rm = new LinkedHashMap<>();
                     rm.put("id",        r.getId());
                     rm.put("content",   r.getContent());
                     rm.put("createdAt", r.getCreatedAt().toString());
+                    rm.put("likeCount", r.getLikeCount());
+                    rm.put("isLiked",   _likedIds.contains(r.getId()));
                     rm.put("author", Map.of(
                             "id",        r.getAuthor().getId(),
                             "fullName",  r.getAuthor().getFullName(),

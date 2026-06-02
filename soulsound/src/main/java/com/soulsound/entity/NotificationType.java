@@ -9,5 +9,6 @@ public enum NotificationType {
     ACCOUNT_UNBANNED,
     TRACK_HIDDEN,
     TRACK_UNHIDDEN,
-    ADMIN_MESSAGE
+    ADMIN_MESSAGE,
+    COMMENT_LIKED
 }

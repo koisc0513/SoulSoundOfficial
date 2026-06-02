@@ -41,6 +41,7 @@ public class NotificationService {
         payload.put("actorAvatarUrl",   n.getActorAvatarUrl()    != null ? n.getActorAvatarUrl()    : "");
         payload.put("actorEmail",       n.getActorEmail()        != null ? n.getActorEmail()        : "");
         payload.put("trackId",          (Object) n.getTrackId());
+        payload.put("commentId",        (Object) n.getCommentId());
         payload.put("trackTitle",       n.getTrackTitle()        != null ? n.getTrackTitle()        : "");
         payload.put("trackThumbnailUrl",n.getTrackThumbnailUrl() != null ? n.getTrackThumbnailUrl() : "");
         sseService.pushToUser(n.getRecipient().getId(), payload);
@@ -153,6 +154,39 @@ public class NotificationService {
         n.setTrackId(track.getId());
         n.setTrackTitle(track.getTitle());
         n.setTrackThumbnailUrl(track.getThumbnailUrl());
+
+        upsert(existing, n);
+    }
+
+    /**
+     * COMMENT_LIKED: thông báo cho tác giả comment khi người khác tim comment.
+     * Dedup theo (recipient, type, actorEmail, commentId)
+     * → like / unlike / like lại cùng comment → chỉ 1 thông báo mới nhất.
+     * Không thông báo nếu người like chính là tác giả comment.
+     */
+    public void notifyCommentLiked(User liker, Comment comment, Track track) {
+        // Không tự thông báo cho chính mình
+        if (liker.getId().equals(comment.getAuthor().getId())) return;
+
+        List<Notification> existing = notifRepo
+                .findByRecipientIdAndTypeAndActorEmailAndCommentId(
+                        comment.getAuthor().getId(),
+                        NotificationType.COMMENT_LIKED,
+                        liker.getEmail(),
+                        comment.getId());
+
+        Notification n = new Notification();
+        n.setRecipient(comment.getAuthor());
+        n.setType(NotificationType.COMMENT_LIKED);
+        n.setMessage(liker.getFullName() + " đã thích bình luận của bạn trên bài \""
+                + track.getTitle() + "\".");
+                n.setActorName(liker.getFullName());
+        n.setActorAvatarUrl(liker.getAvatarUrl());
+        n.setActorEmail(liker.getEmail());
+        n.setTrackId(track.getId());
+        n.setTrackTitle(track.getTitle());
+        n.setTrackThumbnailUrl(track.getThumbnailUrl());
+        n.setCommentId(comment.getId());
 
         upsert(existing, n);
     }

@@ -36,6 +36,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             Long recipientId, NotificationType type, Long trackId);
 
     /** ACCOUNT_BANNED: 1 thông báo duy nhất mỗi user */
+    List<Notification> findByRecipientIdAndTypeAndActorEmailAndCommentId(
+            Long recipientId, NotificationType type, String actorEmail, Long commentId);
+
     List<Notification> findByRecipientIdAndType(
             Long recipientId, NotificationType type);
 }
